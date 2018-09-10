@@ -1,5 +1,6 @@
 // ==UserScript==
 // @name enhanced-gog
+// @version 1.0.0
 // @description Enhanced experience on GOG.com
 // @include       http://*.gog.com/game/*
 // @include       https://*.gog.com/game/*
@@ -682,6 +683,7 @@ var itad = IsThereAnyDeal(config.BASE_URL, config.API_KEY);
  * @param {Object} stats Contains IsThereAnyDeal Statistics
  */
 var renderStats = function (stats) {
+    console.log(stats);
     q('div.module.module--buy').appendChild( c('div', 'enhanced-gog-container module__foot') );
 
     var Point = function (children) { return h('p', { class: 'buy-footer-info-point' }, children); };
@@ -690,7 +692,7 @@ var renderStats = function (stats) {
 
     var CurrentLowest = function (data) { return Point([
         h('b', {}, 'Current Lowest Price: '),
-        ("$" + (data.price_new) + " at "),
+        ("$" + (data.price_new.toFixed(2)) + " at "),
         Link(data.url, data.shop.name),
         (" (DRM: " + (data.drm[0]) + ") "),
         InfoLink(data.itad_url, 'Info')
@@ -698,13 +700,13 @@ var renderStats = function (stats) {
 
     var HistoricalLow = function (data) { return Point([
         h('b', {}, 'Historical Lowest Price: '),
-        ("$" + (data.price) + " at " + (data.shop.name) + " on " + (data.date) + " "),
+        ("$" + (data.price.toFixed(2)) + " at " + (data.shop.name) + " on " + (data.date) + " "),
         InfoLink(data.urls.history, 'Info')
     ]); };
 
     var HistoricalLowGOG = function (data) { return Point([
         h('b', {}, 'Historical Lowest Price on GOG: '),
-        ("$" + (data.price) + " on " + (data.date) + " "),
+        ("$" + (data.price.toFixed(2)) + " on " + (data.date) + " "),
         InfoLink(data.urls.history, 'Info')
     ]); };
 
@@ -730,6 +732,8 @@ var renderStats = function (stats) {
  * Retrieves Data & calls renderStats on a timeOut
  */
 var runUserScript = function () {
+    console.log('== Enhanced GOG 1.0.0 ==');
+
     setTimeout(function () {
         var game_id = q('div.product-row--has-card').getAttribute('gog-product');
     
@@ -751,7 +755,7 @@ var runUserScript = function () {
                 });
             })
             .catch(function (err) {
-                console.log(("Enhanced GOG Error has occured: " + err));
+                console.log(("Enhanced GOG - Error has occured: " + err));
             })
         ;
     }, 800);

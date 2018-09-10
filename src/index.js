@@ -25,6 +25,7 @@ const itad = IsThereAnyDeal(config.BASE_URL, config.API_KEY);
  * @param {Object} stats Contains IsThereAnyDeal Statistics
  */
 const renderStats = stats => {
+    console.log(stats);
     q('div.module.module--buy').appendChild( c('div', 'enhanced-gog-container module__foot') );
 
     const Point = children => h('p', { class: 'buy-footer-info-point' }, children);
@@ -33,7 +34,7 @@ const renderStats = stats => {
 
     const CurrentLowest = data => Point([
         h('b', {}, 'Current Lowest Price: '),
-        `$${ data.price_new } at `,
+        `$${ data.price_new.toFixed(2) } at `,
         Link(data.url, data.shop.name),
         ` (DRM: ${ data.drm[0] }) `,
         InfoLink(data.itad_url, 'Info')
@@ -41,13 +42,13 @@ const renderStats = stats => {
 
     const HistoricalLow = data => Point([
         h('b', {}, 'Historical Lowest Price: '),
-        `$${ data.price } at ${ data.shop.name } on ${ data.date } `,
+        `$${ data.price.toFixed(2) } at ${ data.shop.name } on ${ data.date } `,
         InfoLink(data.urls.history, 'Info')
     ]);
 
     const HistoricalLowGOG = data => Point([
         h('b', {}, 'Historical Lowest Price on GOG: '),
-        `$${ data.price } on ${ data.date } `,
+        `$${ data.price.toFixed(2) } on ${ data.date } `,
         InfoLink(data.urls.history, 'Info')
     ]);
 
@@ -73,6 +74,8 @@ const renderStats = stats => {
  * Retrieves Data & calls renderStats on a timeOut
  */
 const runUserScript = () => {
+    console.log('== Enhanced GOG 1.0.0 ==');
+
     setTimeout(() => {
         const game_id = q('div.product-row--has-card').getAttribute('gog-product');
     
@@ -94,7 +97,7 @@ const runUserScript = () => {
                 })
             })
             .catch(err => {
-                console.log(`Enhanced GOG Error has occured: ${ err }`);
+                console.log(`Enhanced GOG - Error has occured: ${ err }`);
             })
         ;
     }, 800);
