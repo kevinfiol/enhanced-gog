@@ -19,7 +19,7 @@ const config = {
     output: {
         file: './bin/enhanced-gog.user.js',
         format: 'esm',
-        sourcemap: false
+        sourcemap: true
     },
     plugins: [
         nodeResolve(),

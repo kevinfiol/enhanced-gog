@@ -1,3 +1,14 @@
+const capitalize = str => str.trim()[0].toUpperCase() + str.trim().slice(1);
+
+const getDateStr = unixTime => {
+    const date = new Date(unixTime * 1000);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    return `${month}/${day}/${year}`;
+};
+
 const request = (method, url, params) => {
     const queryArr = Object.keys(params).map(key => {
         return `${ encodeURIComponent(key) }=${ encodeURIComponent(params[key]) }`;
@@ -39,4 +50,4 @@ const request = (method, url, params) => {
     });
 };
 
-export { request }
+export { capitalize, getDateStr, request }
