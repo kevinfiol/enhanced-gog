@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name enhanced-gog
-// @version 1.0.0
+// @version 1.0.1
 // @description Enhanced experience on GOG.com
 // @include       http://*.gog.com/game/*
 // @include       https://*.gog.com/game/*
@@ -731,7 +731,7 @@ var renderStats = function (stats) {
  * Retrieves Data & calls renderStats on a timeOut
  */
 var runUserScript = function () {
-    console.log('== Enhanced GOG 1.0.0 ==');
+    console.log('== Enhanced GOG 1.0.1 ==');
 
     setTimeout(function () {
         var game_id = q('div.product-row--has-card').getAttribute('gog-product');
