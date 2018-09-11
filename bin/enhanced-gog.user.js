@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://gitlab.com/kevinfiol/enhanced-gog
-// @version 1.0.1
+// @version 1.0.2
 // @description Enhanced experience on GOG.com
-// @include       http://*.gog.com/game/*
-// @include       https://*.gog.com/game/*
+// @include http://*.gog.com/game/*
+// @include https://*.gog.com/game/*
 // @icon https://images2.imgbox.com/82/de/Rz3uTP3A_o.png
 // @updateURL https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js
 // @downloadURL https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js
@@ -498,7 +498,7 @@ function app(state, actions, view, container) {
 }
 
 var config = {
-    VERSION: '1.0.1',
+    VERSION: '1.0.2',
     BASE_URL: 'https://api.isthereanydeal.com',
     API_KEY: 'd047b30e0fc7d9118f3953de04fa6af9eba22379'
 };
@@ -770,5 +770,8 @@ var runUserScript = function () {
 /**
  * Check if DOM is ready
  */
-if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', runUserScript); }
-else { runUserScript(); }
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runUserScript);
+} else {
+    runUserScript();
+}

@@ -107,5 +107,8 @@ const runUserScript = () => {
 /**
  * Check if DOM is ready
  */
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', runUserScript);
-else runUserScript();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runUserScript);
+} else {
+    runUserScript();
+}
