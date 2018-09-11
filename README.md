@@ -12,10 +12,15 @@ A userscript that aims to improve the overall experience browsing [GOG.com](http
 
 Data graciously provided by [IsThereAnyDeal](https://isthereanydeal.com).
 
-![screenshot](https://vgy.me/8dOKAO.png)
+![screenshot](https://images2.imgbox.com/09/10/lJds3wZk_o.jpg)
 
 ## Install
 
-1. Install [Violentmonkey](https://violentmonkey.github.io/get-it/), which is available for Firefox and Chrome. It probably works with other userscript managers such as Greasemonkey or Tampermonkey, but it has not been tested with either.
+1. Install a Userscript Manager
+    * Chrome: [Violentmonkey](https://chrome.google.com/webstore/detail/violentmonkey/jinjaccalgkegednnccohejagnlnfdag) or [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+    * Firefox: [Violentmonkey](https://addons.mozilla.org/en-US/firefox/addon/violentmonkey/) or [Tampermonkey](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/) or [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/)
+    * Opera: Download Violentmonkey or Tampermonkey from the Chrome Web Store
+
+Note: I recommend Violentmonkey since it is Free, Open-Source, and light on system resources. Tampermonkey is good, but it is proprietary. Meanwhile, Greasemonkey since Greasemonkey 4 is [unable to automatically update userscripts](https://github.com/greasemonkey/greasemonkey/issues/2531).
 
 2. **[Click here to install the userscript](https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js)**
