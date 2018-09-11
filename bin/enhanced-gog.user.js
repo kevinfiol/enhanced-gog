@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://gitlab.com/kevinfiol/enhanced-gog
-// @version 1.0.3
+// @version 1.0.4
 // @description Enhanced experience on GOG.com
 // @license MIT; https://gitlab.com/kevinfiol/enhanced-gog/blob/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -417,7 +417,7 @@ function app(state, actions, view, container) {
 }
 
 var config = {
-    VERSION: '1.0.3',
+    VERSION: '1.0.4',
     BASE_URL: 'https://api.isthereanydeal.com',
     API_KEY: 'd047b30e0fc7d9118f3953de04fa6af9eba22379'
 };
