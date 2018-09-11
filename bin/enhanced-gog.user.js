@@ -683,7 +683,6 @@ var itad = IsThereAnyDeal(config.BASE_URL, config.API_KEY);
  * @param {Object} stats Contains IsThereAnyDeal Statistics
  */
 var renderStats = function (stats) {
-    console.log(stats);
     q('div.module.module--buy').appendChild( c('div', 'enhanced-gog-container module__foot') );
 
     var Point = function (children) { return h('p', { class: 'buy-footer-info-point' }, children); };

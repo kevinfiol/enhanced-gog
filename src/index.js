@@ -25,7 +25,6 @@ const itad = IsThereAnyDeal(config.BASE_URL, config.API_KEY);
  * @param {Object} stats Contains IsThereAnyDeal Statistics
  */
 const renderStats = stats => {
-    console.log(stats);
     q('div.module.module--buy').appendChild( c('div', 'enhanced-gog-container module__foot') );
 
     const Point = children => h('p', { class: 'buy-footer-info-point' }, children);
@@ -74,7 +73,7 @@ const renderStats = stats => {
  * Retrieves Data & calls renderStats on a timeOut
  */
 const runUserScript = () => {
-    console.log('== Enhanced GOG 1.0.0 ==');
+    console.log('== Enhanced GOG 1.0.1 ==');
 
     setTimeout(() => {
         const game_id = q('div.product-row--has-card').getAttribute('gog-product');
