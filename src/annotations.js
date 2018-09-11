@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://gitlab.com/kevinfiol/enhanced-gog
-// @version 1.0.3
+// @version 1.0.4
 // @description Enhanced experience on GOG.com
+// @license MIT; https://gitlab.com/kevinfiol/enhanced-gog/blob/master/LICENSE
 // @include http://*.gog.com/game/*
 // @include https://*.gog.com/game/*
 // @icon https://images2.imgbox.com/82/de/Rz3uTP3A_o.png
