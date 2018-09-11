@@ -1,4 +1,3 @@
-import 'annotations';
 import { h, app } from 'hyperapp';
 import { config } from 'config';
 import IsThereAnyDeal from 'services/IsThereAnyDeal';

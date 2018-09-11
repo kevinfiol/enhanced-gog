@@ -1,8 +1,26 @@
+import fs from 'fs';
 import path from 'path';
 import nodeResolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import buble from 'rollup-plugin-buble';
 import alias from 'rollup-plugin-alias';
+import MagicString from 'magic-string';
+
+const prependBanner = (options = {}) => {
+    return {
+        transformBundle(code) {
+            if (options.banner && typeof options.banner === 'string') {
+                const content = options.banner;
+                const magicStr = new MagicString(code);
+
+                magicStr.prepend(content + '\n');
+                return { code: magicStr.toString() };
+            }
+        }
+    };
+}
+
+const annotations = fs.readFileSync(path.join(__dirname, 'annotations.txt'), 'utf8');
 
 const aliases = {
     'components': path.resolve(__dirname, 'src/components'),
@@ -18,14 +36,15 @@ const config = {
     input: './src/index.js',
     output: {
         file: './bin/enhanced-gog.user.js',
-        format: 'esm',
+        format: 'iife',
         sourcemap: process.env.PROD === 'true' ? false : true
     },
     plugins: [
         nodeResolve(),
         commonjs(),
         alias(aliases),
-        buble()
+        buble(),
+        prependBanner({ banner: annotations })
     ]
 };
 
