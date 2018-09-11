@@ -19,13 +19,14 @@ const c = (tag, className) => {
  */
 const itad = IsThereAnyDeal(config.BASE_URL, config.API_KEY);
 
-
 /**
  * renderStats Renders IsThereAnyDeal Statistics to the Page
  * @param {Object} stats Contains IsThereAnyDeal Statistics
  */
 const renderStats = stats => {
-    q('div.module.module--buy').appendChild( c('div', 'enhanced-gog-container module__foot') );
+    // Create and Append Container
+    const egContainer = c('div', 'enhanced-gog-container module__foot');
+    q('div.module.module--buy').appendChild(egContainer);
 
     const Point = children => h('p', { class: 'buy-footer-info-point' }, children);
     const Link = (href, text) => h('a', { class: 'un', href: href }, text);
@@ -66,14 +67,15 @@ const renderStats = stats => {
         ]);
     };
 
-    app({}, {}, view, q('.enhanced-gog-container'));
+    // Mount Hyperapp on Container
+    app({}, {}, view, egContainer);
 };
 
 /**
  * Retrieves Data & calls renderStats on a timeOut
  */
 const runUserScript = () => {
-    console.log('== Enhanced GOG 1.0.1 ==');
+    console.log(`== Enhanced GOG ${ config.VERSION } ==`);
 
     setTimeout(() => {
         const game_id = q('div.product-row--has-card').getAttribute('gog-product');

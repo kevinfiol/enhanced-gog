@@ -1,9 +1,13 @@
 // ==UserScript==
 // @name enhanced-gog
+// @namespace https://gitlab.com/kevinfiol/enhanced-gog
 // @version 1.0.1
 // @description Enhanced experience on GOG.com
 // @include       http://*.gog.com/game/*
 // @include       https://*.gog.com/game/*
+// @icon https://images2.imgbox.com/82/de/Rz3uTP3A_o.png
+// @updateURL https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js
+// @downloadURL https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js
 // @grant GM_xmlhttpRequest
 // @grant GM.xmlHttpRequest
 
@@ -494,6 +498,7 @@ function app(state, actions, view, container) {
 }
 
 var config = {
+    VERSION: '1.0.1',
     BASE_URL: 'https://api.isthereanydeal.com',
     API_KEY: 'd047b30e0fc7d9118f3953de04fa6af9eba22379'
 };
@@ -677,13 +682,14 @@ var c = function (tag, className) {
  */
 var itad = IsThereAnyDeal(config.BASE_URL, config.API_KEY);
 
-
 /**
  * renderStats Renders IsThereAnyDeal Statistics to the Page
  * @param {Object} stats Contains IsThereAnyDeal Statistics
  */
 var renderStats = function (stats) {
-    q('div.module.module--buy').appendChild( c('div', 'enhanced-gog-container module__foot') );
+    // Create and Append Container
+    var egContainer = c('div', 'enhanced-gog-container module__foot');
+    q('div.module.module--buy').appendChild(egContainer);
 
     var Point = function (children) { return h('p', { class: 'buy-footer-info-point' }, children); };
     var Link = function (href, text) { return h('a', { class: 'un', href: href }, text); };
@@ -724,14 +730,15 @@ var renderStats = function (stats) {
         ]);
     };
 
-    app({}, {}, view, q('.enhanced-gog-container'));
+    // Mount Hyperapp on Container
+    app({}, {}, view, egContainer);
 };
 
 /**
  * Retrieves Data & calls renderStats on a timeOut
  */
 var runUserScript = function () {
-    console.log('== Enhanced GOG 1.0.1 ==');
+    console.log(("== Enhanced GOG " + (config.VERSION) + " =="));
 
     setTimeout(function () {
         var game_id = q('div.product-row--has-card').getAttribute('gog-product');
@@ -765,4 +772,3 @@ var runUserScript = function () {
  */
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', runUserScript); }
 else { runUserScript(); }
-//# sourceMappingURL=enhanced-gog.user.js.map
