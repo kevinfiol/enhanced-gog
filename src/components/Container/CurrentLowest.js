@@ -5,7 +5,7 @@ import { Link } from 'components/Link';
 export const CurrentLowest = () => state => {
     const data = state.currentLowest;
 
-    return Point([
+    return Point({}, [
         h('b', {}, 'Current Lowest Price: '),
         `$${ data.price_new.toFixed(2) } at `,
         Link(data.url, data.shop.name),

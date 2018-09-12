@@ -5,7 +5,9 @@ const Group = (region, children) => () => h('optgroup', { label: region }, child
 const Option = (code, name) => () => h('option', { value: code }, name);
 
 export const CountrySelect = () => (state, actions) => {
-    return Point([
+    return Point({
+        style: { paddingTop: '1em' }
+    }, [
         h('b', {}, 'Select Price Region: '),
         h('select', {}, [
             Object.keys(state.region_map).map(region => {
