@@ -22,7 +22,7 @@ module.exports = (base_url, api_key) => {
             .then(JSON.parse)
             .then(res => {
                 if (!res['.meta'].match || !res['.meta'].active) {
-                    return null;
+                    throw('Game Not Found.')
                 }
 
                 return res.data.plain;

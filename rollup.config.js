@@ -5,6 +5,10 @@ import commonjs from 'rollup-plugin-commonjs';
 import buble from 'rollup-plugin-buble';
 import alias from 'rollup-plugin-alias';
 import MagicString from 'magic-string';
+import json from 'rollup-plugin-json';
+
+const isProduction = (process.env.PROD && process.env.PROD === 'true');
+const annotations = fs.readFileSync(path.join(__dirname, 'annotations.txt'), 'utf8');
 
 const prependBanner = (options = {}) => {
     return {
@@ -12,15 +16,20 @@ const prependBanner = (options = {}) => {
             if (options.banner && typeof options.banner === 'string') {
                 const content = options.banner;
                 const magicStr = new MagicString(code);
+                const hasSourceMap = options.sourceMap !== false && options.sourcemap !== false;
 
                 magicStr.prepend(content + '\n');
-                return { code: magicStr.toString() };
+                const result = { code: magicStr.toString() };
+
+                if (hasSourceMap) {
+                    result.map = magicStr.generateMap({ hires: true });
+                }
+                
+                return result;
             }
         }
     };
 }
-
-const annotations = fs.readFileSync(path.join(__dirname, 'annotations.txt'), 'utf8');
 
 const aliases = {
     'components': path.resolve(__dirname, 'src/components'),
@@ -37,9 +46,10 @@ const config = {
     output: {
         file: './bin/enhanced-gog.user.js',
         format: 'iife',
-        sourcemap: process.env.PROD === 'true' ? false : true
+        sourcemap: !isProduction
     },
     plugins: [
+        json({ exclude: 'node_modules/**', preferConst: true }),
         nodeResolve(),
         commonjs(),
         alias(aliases),
