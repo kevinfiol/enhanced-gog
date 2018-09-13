@@ -1,16 +1,23 @@
 import { config } from 'config';
 import IsThereAnyDeal from 'services/IsThereAnyDeal';
-// import Storage from 'services/Storage';
+import Storage from 'services/Storage';
 
 /**
  * Dependencies
  */
 const itad = IsThereAnyDeal(config.BASE_URL, config.API_KEY);
-// const storage = Storage();
+const storage = Storage();
 
 /**
  * Actions
  */
+const setStatsToNull = () => state => ({
+    historicalLow: null,
+    historicalLowGOG: null,
+    currentLowest: null,
+    bundles: null
+});
+
 const setHistoricalLow = historicalLow => state => ({
     historicalLow
 });
@@ -35,14 +42,31 @@ const setUserCountry = user_country => state => ({
     user_country
 });
 
+const readAndSetFromStorage = () => (state, actions) => {
+    const user_region = storage.getValue('user_region');
+    const user_country = storage.getValue('user_country');
+
+    if (user_region && user_country) {
+        actions.setUserRegion(user_region);
+        actions.setUserCountry(user_country);
+    } else {
+        actions.persistToStorage({ key: 'user_region', value: state.user_region });
+        actions.persistToStorage({ key: 'user_country', value: state.user_country });
+    }
+};
+
+const persistToStorage = item => () => {
+    storage.setValue(item.key, item.value);
+};
+
 const getAllPriceData = () => (state, actions) => {
     itad.getPlainId(state.game_id)
         .then(plain_id => {
             return Promise.all([
-                itad.getHistoricalLow(plain_id),
-                itad.getHistoricalLow(plain_id, 'gog'),
-                itad.getCurrentLowest(plain_id),
-                itad.getBundles(plain_id)
+                itad.getHistoricalLow(plain_id, null, state.user_region, state.user_country),
+                itad.getHistoricalLow(plain_id, 'gog', state.user_region, state.user_country),
+                itad.getCurrentLowest(plain_id, state.user_region, state.user_country),
+                itad.getBundles(plain_id, state.user_region)
             ]);
         })
         .then(res => {
@@ -59,8 +83,13 @@ const getAllPriceData = () => (state, actions) => {
 
 export const actions = {
     getAllPriceData,
+    setStatsToNull,
     setCurrentLowest,
     setHistoricalLow,
     setHistoricalLowGOG,
-    setBundles
+    setBundles,
+    setUserRegion,
+    setUserCountry,
+    readAndSetFromStorage,
+    persistToStorage
 };

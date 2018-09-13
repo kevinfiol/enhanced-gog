@@ -1,18 +1,9 @@
 import { h, app } from 'hyperapp';
 import { config } from 'config';
+import { q, c } from 'util';
 import { actions } from 'actions/index';
 import { Container } from 'components/Container';
 import region_map from './data/region_map.json';
-
-/**
- * DOM Methods
- */
-const q = query => document.querySelector(query);
-const c = (tag, className) => {
-    const el = document.createElement(tag);
-    el.className = className;
-    return el;
-};
 
 const createApp = (game_id, container) => {
     // Hyperapp State & Actions
@@ -44,8 +35,8 @@ const runUserScript = () => {
         const game_id = q('div.product-row--has-card').getAttribute('gog-product');
 
         // Create and Append Container
-        const container = c('div', 'enhanced-gog-container module__foot');
-        q('div.module.module--buy').appendChild(container);
+        const container = c('div', 'enhanced-gog-container');
+        q('header.module__top').insertAdjacentElement('afterend', container);
 
         createApp(game_id, container);
     }, 800);

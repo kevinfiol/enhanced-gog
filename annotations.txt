@@ -11,4 +11,8 @@
 // @downloadURL https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js
 // @grant GM_xmlhttpRequest
 // @grant GM.xmlHttpRequest
+// @grant GM_getValue
+// @grant GM_setValue
+// @grant GM_deleteValue
+// @grant GM_listValues
 // ==/UserScript==

@@ -1,3 +1,22 @@
+/**
+ * DOM Methods
+ */
+const q = query => document.querySelector(query);
+
+const c = (tag, className, innerHTML = '') => {
+    const el = document.createElement(tag);
+    el.className = className;
+    el.innerHTML = innerHTML;
+    return el;
+};
+
+const createPriceFormatter = (sign, delimiter, left) => {
+    return (price) => {
+        const delimited_price = price.replace('.', delimiter);
+        return left ? `${sign}${delimited_price}` : `${delimited_price}${sign}`
+    };
+};
+
 const capitalize = str => str.trim()[0].toUpperCase() + str.trim().slice(1);
 
 const getDateStr = unixTime => {
@@ -50,4 +69,4 @@ const request = (method, url, params) => {
     });
 };
 
-export { capitalize, getDateStr, request }
+export { q, c, createPriceFormatter, capitalize, getDateStr, request }

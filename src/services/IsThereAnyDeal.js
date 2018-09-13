@@ -33,15 +33,17 @@ module.exports = (base_url, api_key) => {
         ;
     };
 
-    const getHistoricalLow = (plain_id, shops = null) => {
+    const getHistoricalLow = (plain_id, shops = null, region, country) => {
         const endpoint = template('v01', 'game', 'lowest');
-        const data = { key: api_key, plains: plain_id };
+        const data = { key: api_key, plains: plain_id, region, country };
         if (shops) data.shops = shops;
 
         return request('GET', endpoint, data)
             .then(JSON.parse)
             .then(parseResponse)
             .then(res => {
+                if (!res.price) return null;
+
                 return {
                     date: getDateStr(res.added),
                     cut: res.cut,
@@ -56,20 +58,22 @@ module.exports = (base_url, api_key) => {
         ;
     };
 
-    const getCurrentLowest = plain_id => {
+    const getCurrentLowest = (plain_id, region, country) => {
         const endpoint = template('v01', 'game', 'prices');
-        const data = { key: api_key, plains: plain_id };
+        const data = { key: api_key, plains: plain_id, region, country };
 
         return request('GET', endpoint, data)
             .then(JSON.parse)
             .then(parseResponse)
             .then(res => {
+                if (!res.list.length) return null;
+
                 const lowest = res.list.reduce((a, x) => {
                     a = a.price_new >= x.price_new ? x : a;
                     return a;
                 }, { price_new: Infinity })
-
-                lowest.drm[0] = capitalize(lowest.drm[0]);
+                
+                if (lowest.drm[0]) lowest.drm[0] = capitalize(lowest.drm[0]);
                 lowest.itad_url = res.urls.game;
 
                 return lowest;
@@ -80,9 +84,9 @@ module.exports = (base_url, api_key) => {
         ;
     };
 
-    const getBundles = plain_id => {
+    const getBundles = (plain_id, region) => {
         const endpoint = template('v01', 'game', 'bundles');
-        const data = { key: api_key, plains: plain_id };
+        const data = { key: api_key, plains: plain_id, region };
 
         return request('GET', endpoint, data)
             .then(JSON.parse)
