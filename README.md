@@ -3,6 +3,8 @@ Enhanced GOG Userscript
 
 ## Description
 
+### [GOG Community Discussion Thread](https://www.gog.com/forum/general/enhanced_gog_userscript_adds_isthereanydeal_integration_to_game_pages)
+
 A userscript that aims to improve the overall experience browsing [GOG.com](https://gog.com). `enhanced-gog` helps you always find the lowest prices on games by displaying:
 
 * Current lowest price available from GOG, or other digital distributors
