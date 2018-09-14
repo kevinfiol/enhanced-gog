@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://gitlab.com/kevinfiol/enhanced-gog
-// @version 1.0.5
+// @version 1.1.0
 // @description Enhanced experience on GOG.com
 // @license MIT; https://gitlab.com/kevinfiol/enhanced-gog/blob/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -11,6 +11,10 @@
 // @downloadURL https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js
 // @grant GM_xmlhttpRequest
 // @grant GM.xmlHttpRequest
+// @grant GM_getValue
+// @grant GM_setValue
+// @grant GM_deleteValue
+// @grant GM_listValues
 // ==/UserScript==
 
 (function () {
@@ -421,9 +425,30 @@
   }
 
   var config = {
-      VERSION: '1.0.5',
+      VERSION: '1.1.0',
       BASE_URL: 'https://api.isthereanydeal.com',
       API_KEY: 'd047b30e0fc7d9118f3953de04fa6af9eba22379'
+  };
+
+  /**
+   * DOM Methods
+   */
+  var q = function (query) { return document.querySelector(query); };
+
+  var c = function (tag, className, innerHTML) {
+      if ( innerHTML === void 0 ) innerHTML = '';
+
+      var el = document.createElement(tag);
+      el.className = className;
+      el.innerHTML = innerHTML;
+      return el;
+  };
+
+  var createPriceFormatter = function (sign, delimiter, left) {
+      return function (price) {
+          var delimited_price = price.replace('.', delimiter);
+          return left ? ("" + sign + delimited_price) : ("" + delimited_price + sign);
+      };
   };
 
   var capitalize = function (str) { return str.trim()[0].toUpperCase() + str.trim().slice(1); };
@@ -479,6 +504,9 @@
   };
 
   var util = /*#__PURE__*/Object.freeze({
+    q: q,
+    c: c,
+    createPriceFormatter: createPriceFormatter,
     capitalize: capitalize,
     getDateStr: getDateStr,
     request: request
@@ -508,7 +536,7 @@
               .then(JSON.parse)
               .then(function (res) {
                   if (!res['.meta'].match || !res['.meta'].active) {
-                      return null;
+                      throw('Game Not Found.')
                   }
 
                   return res.data.plain;
@@ -519,17 +547,19 @@
           ;
       };
 
-      var getHistoricalLow = function (plain_id, shops) {
+      var getHistoricalLow = function (plain_id, shops, region, country) {
           if ( shops === void 0 ) shops = null;
 
           var endpoint = template('v01', 'game', 'lowest');
-          var data = { key: api_key, plains: plain_id };
+          var data = { key: api_key, plains: plain_id, region: region, country: country };
           if (shops) { data.shops = shops; }
 
           return request$1('GET', endpoint, data)
               .then(JSON.parse)
               .then(parseResponse)
               .then(function (res) {
+                  if (!res.price) { return null; }
+
                   return {
                       date: getDateStr$1(res.added),
                       cut: res.cut,
@@ -544,20 +574,22 @@
           ;
       };
 
-      var getCurrentLowest = function (plain_id) {
+      var getCurrentLowest = function (plain_id, region, country) {
           var endpoint = template('v01', 'game', 'prices');
-          var data = { key: api_key, plains: plain_id };
+          var data = { key: api_key, plains: plain_id, region: region, country: country };
 
           return request$1('GET', endpoint, data)
               .then(JSON.parse)
               .then(parseResponse)
               .then(function (res) {
+                  if (!res.list.length) { return null; }
+
                   var lowest = res.list.reduce(function (a, x) {
                       a = a.price_new >= x.price_new ? x : a;
                       return a;
                   }, { price_new: Infinity });
-
-                  lowest.drm[0] = capitalize$1(lowest.drm[0]);
+                  
+                  if (lowest.drm[0]) { lowest.drm[0] = capitalize$1(lowest.drm[0]); }
                   lowest.itad_url = res.urls.game;
 
                   return lowest;
@@ -568,9 +600,9 @@
           ;
       };
 
-      var getBundles = function (plain_id) {
+      var getBundles = function (plain_id, region) {
           var endpoint = template('v01', 'game', 'bundles');
-          var data = { key: api_key, plains: plain_id };
+          var data = { key: api_key, plains: plain_id, region: region };
 
           return request$1('GET', endpoint, data)
               .then(JSON.parse)
@@ -590,71 +622,893 @@
       };
   };
 
-  /**
-   * DOM Methods
-   */
-  var q = function (query) { return document.querySelector(query); };
-  var c = function (tag, className) {
-      var el = document.createElement(tag);
-      el.className = className;
-      return el;
+  var Storage = function () {
+      var getValue = function (key) { return GM_getValue(key, null); };
+
+      var setValue = function (key, value) { return GM_setValue(key, value); };
+
+      var deleteValue = function (key) { return GM_deleteValue(key); };
+
+      var listValues = function () { return GM_listValues(); };
+
+      return { getValue: getValue, setValue: setValue, deleteValue: deleteValue, listValues: listValues };
   };
 
   /**
    * Dependencies
    */
   var itad = IsThereAnyDeal(config.BASE_URL, config.API_KEY);
+  var storage = Storage();
 
   /**
-   * renderStats Renders IsThereAnyDeal Statistics to the Page
-   * @param {Object} stats Contains IsThereAnyDeal Statistics
+   * Actions
    */
-  var renderStats = function (stats) {
-      // Create and Append Container
-      var egContainer = c('div', 'enhanced-gog-container module__foot');
-      q('div.module.module--buy').appendChild(egContainer);
+  var setStatsToNull = function () { return function (state) { return ({
+      historicalLow: null,
+      historicalLowGOG: null,
+      currentLowest: null,
+      bundles: null
+  }); }; };
 
-      var Point = function (children) { return h('p', { class: 'buy-footer-info-point' }, children); };
-      var Link = function (href, text) { return h('a', { class: 'un', href: href }, text); };
-      var InfoLink = function (href, text) { return ['(', Link(href, text), ')']; };
+  var setHistoricalLow = function (historicalLow) { return function (state) { return ({
+      historicalLow: historicalLow
+  }); }; };
 
-      var CurrentLowest = function (data) { return Point([
-          h('b', {}, 'Current Lowest Price: '),
-          ("$" + (data.price_new.toFixed(2)) + " at "),
-          Link(data.url, data.shop.name),
-          (" (DRM: " + (data.drm[0]) + ") "),
-          InfoLink(data.itad_url, 'Info')
-      ]); };
+  var setHistoricalLowGOG = function (historicalLowGOG) { return function (state) { return ({
+      historicalLowGOG: historicalLowGOG
+  }); }; };
 
-      var HistoricalLow = function (data) { return Point([
-          h('b', {}, 'Historical Lowest Price: '),
-          ("$" + (data.price.toFixed(2)) + " at " + (data.shop.name) + " on " + (data.date) + " "),
-          InfoLink(data.urls.history, 'Info')
-      ]); };
+  var setCurrentLowest = function (currentLowest) { return function (state) { return ({
+      currentLowest: currentLowest
+  }); }; };
 
-      var HistoricalLowGOG = function (data) { return Point([
-          h('b', {}, 'Historical Lowest Price on GOG: '),
-          ("$" + (data.price.toFixed(2)) + " on " + (data.date) + " "),
-          InfoLink(data.urls.history, 'Info')
-      ]); };
+  var setBundles = function (bundles) { return function (state) { return ({
+      bundles: bundles
+  }); }; };
 
-      var Bundles = function (data) { return Point([
-          h('b', {}, 'Number of times this game has been in a bundle: '),
-          ((data.total) + " "),
-          InfoLink(data.urls.bundles, 'Info')
-      ]); };
+  var setUserRegion = function (user_region) { return function (state) { return ({
+      user_region: user_region
+  }); }; };
 
-      var view = function () {
-          return h('div', {}, [
-              stats.currentLowest ? CurrentLowest(stats.currentLowest) : null,
-              stats.historicalLow ? HistoricalLow(stats.historicalLow) : null,
-              stats.historicalLowGOG ? HistoricalLowGOG(stats.historicalLowGOG) : null,
-              stats.bundles ? Bundles(stats.bundles) : null
-          ]);
+  var setUserCountry = function (user_country) { return function (state) { return ({
+      user_country: user_country
+  }); }; };
+
+  var cacheResults = function (payload) { return function (state) {
+      var obj;
+
+      var newCache = Object.assign({}, state.cache);
+
+      if (newCache[payload.region]) {
+          newCache[payload.region][payload.country] = payload.results;
+      } else {
+          newCache[payload.region] = ( obj = {}, obj[payload.country] = payload.results, obj );
+      }
+
+      return { cache: newCache };
+  }; };
+
+  var readAndSetFromStorage = function () { return function (state, actions) {
+      var user_region = storage.getValue('user_region');
+      var user_country = storage.getValue('user_country');
+
+      if (user_region && user_country) {
+          actions.setUserRegion(user_region);
+          actions.setUserCountry(user_country);
+      } else {
+          actions.persistToStorage({ key: 'user_region', value: state.user_region });
+          actions.persistToStorage({ key: 'user_country', value: state.user_country });
+      }
+  }; };
+
+  var persistToStorage = function (item) { return function () {
+      storage.setValue(item.key, item.value);
+  }; };
+
+  var getAllPriceData = function () { return function (state, actions) {
+      // Set all ITAD Stats
+      var setStats = function (res) {
+          actions.setHistoricalLow(res[0]);
+          actions.setHistoricalLowGOG(res[1]);
+          actions.setCurrentLowest(res[2]);
+          actions.setBundles(res[3]);
       };
 
+      if (state.cache[state.user_region] &&
+          state.cache[state.user_region][state.user_country]
+      ) {
+          // Results exist in Cache
+          setStats(state.cache[state.user_region][state.user_country]);
+      } else {
+          // Results do not exist in Cache
+          // Retrieve from ITAD
+          itad.getPlainId(state.game_id)
+              .then(function (plain_id) {
+                  return Promise.all([
+                      itad.getHistoricalLow(plain_id, null, state.user_region, state.user_country),
+                      itad.getHistoricalLow(plain_id, 'gog', state.user_region, state.user_country),
+                      itad.getCurrentLowest(plain_id, state.user_region, state.user_country),
+                      itad.getBundles(plain_id, state.user_region)
+                  ]);
+              })
+              .then(function (res) {
+                  setStats(res);
+
+                  // Cache Results
+                  actions.cacheResults({
+                      region: state.user_region,
+                      country: state.user_country,
+                      results: res
+                  });
+              })
+              .catch(function (err) {
+                  console.log(("== Enhanced GOG - Error has occured == " + err));
+              })
+          ;
+      }
+  }; };
+
+  var actions = {
+      getAllPriceData: getAllPriceData,
+      setStatsToNull: setStatsToNull,
+      setCurrentLowest: setCurrentLowest,
+      setHistoricalLow: setHistoricalLow,
+      setHistoricalLowGOG: setHistoricalLowGOG,
+      setBundles: setBundles,
+      setUserRegion: setUserRegion,
+      setUserCountry: setUserCountry,
+      readAndSetFromStorage: readAndSetFromStorage,
+      persistToStorage: persistToStorage,
+      cacheResults: cacheResults
+  };
+
+  var Point = function (attrs, children) { return function () { return h('p', Object.assign({ class: 'buy-footer-info-point' }, attrs), children); }; };
+
+  var Spinner = function () { return function () {
+      return h('div', { class: 'module__foot' }, [
+          Point({ style: { padding: '1.2em 0' } }, [
+              h('span', {
+                  class: 'module-bottom__spinner spinner--small is-spinning'
+              })
+          ])
+      ])
+  }; };
+
+  var Link = function (href, text) { return function () { return h('a', { class: 'un', href: href }, text); }; };
+
+  var CurrentLowest = function () { return function (state) {
+      var data = state.currentLowest;
+      var currency = state.region_map[state.user_region][state.user_country].currency;
+      var formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
+
+      return Point({}, [
+          h('b', {}, 'Current Lowest Price: '),
+          ((formatPrice(data.price_new.toFixed(2))) + " at "),
+          Link(data.url, data.shop.name),
+          data.drm[0] ? (" (DRM: " + (data.drm[0]) + ") ") : ' ',
+          '(', Link(data.itad_url, 'Info'), ')'
+      ]);
+  }; };
+
+  var HistoricalLow = function () { return function (state) {
+      var data = state.historicalLow;
+      var currency = state.region_map[state.user_region][state.user_country].currency;
+      var formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
+
+      return Point({}, [
+          h('b', {}, 'Historical Lowest Price: '),
+          ((formatPrice(data.price.toFixed(2))) + " at " + (data.shop.name) + " on " + (data.date) + " "),
+          '(', Link(data.urls.history, 'Info'), ')'
+      ]);
+  }; };
+
+  var HistoricalLowGOG = function () { return function (state) {
+      var data = state.historicalLowGOG;
+      var currency = state.region_map[state.user_region][state.user_country].currency;
+      var formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
+      
+      return Point({}, [
+          h('b', {}, 'Historical Lowest Price on GOG: '),
+          ((formatPrice(data.price.toFixed(2))) + " on " + (data.date) + " "),
+          '(', Link(data.urls.history, 'Info'), ')'
+      ]);
+  }; };
+
+  var Bundles = function () { return function (state) {
+      var data = state.bundles;
+
+      return Point({}, [
+          h('b', {}, 'Number of times this game has been in a bundle: '),
+          ((data.total) + " "),
+          '(', Link(data.urls.bundles, 'Info'), ')'
+      ]);
+  }; };
+
+  var Stats = function () { return function (state, actions) {
+      return h('div', { class: 'module__foot' }, [
+          state.currentLowest    ? CurrentLowest()    : null,
+          state.historicalLow    ? HistoricalLow()    : null,
+          state.historicalLowGOG ? HistoricalLowGOG() : null,
+          state.bundles          ? Bundles()          : null
+      ]);
+  }; };
+
+  var Group = function (region, children) { return function () { return h('optgroup', { label: region }, children); }; };
+  var Option = function (code, name) { return function () { return h('option', { value: code }, name); }; };
+
+  var CountrySelect = function () { return function (state, actions) {
+      var region_map = state.region_map;
+      var regions = Object.keys(region_map); // ['eu1', 'eu2', 'us', 'ca', ...]
+
+      return h('div', { class: 'module__foot' }, [
+          Point({}, h('b', {}, 'Enhanced GOG Region')),
+          Point({}, [
+              h('select', {
+                  oncreate: function (el) {
+                      el.value = (state.user_region) + "-" + (state.user_country);
+                  },
+      
+                  onchange: function (ev) {
+                      var ref = ev.target.value.split('-');
+                      var new_region = ref[0];
+                      var new_country = ref[1];
+      
+                      // Temporarily Set Stats to Null
+                      actions.setStatsToNull();
+      
+                      // Persist Changes to Storage
+                      actions.persistToStorage({ key: 'user_region', value: new_region });
+                      actions.persistToStorage({ key: 'user_country', value: new_country });
+      
+                      // Update State
+                      actions.setUserRegion(new_region);
+                      actions.setUserCountry(new_country);
+      
+                      // Retrieve New Data
+                      actions.getAllPriceData();
+                  }
+              }, [
+                  regions.map(function (region) {
+                      return Group(region, Object.keys(region_map[region]).map(function (country) {
+                          return Option(region + '-' + country, region_map[region][country].name);
+                      }));
+                  })
+              ])
+          ])
+      ]);
+  }; };
+
+  var Notifications = function () { return function (state, actions) {
+      var currentPrice = parseFloat( q('meta[itemprop="price"]').getAttribute('content') );
+      var pageCurrency = q('meta[itemprop="priceCurrency"]').getAttribute('content');
+
+      var histLow = state.historicalLow.price || null;
+      var curLow = state.currentLowest.price_new || null;
+      var user_currency = state.region_map[state.user_region][state.user_country].currency.code;
+      
+      if (// If price is neither Historical Low or Current Low
+          !( (histLow && currentPrice <= histLow) || (curLow && currentPrice <= curLow) )
+          // Or If Enhanced GOG's Currency does not match the Page's Currency
+          || user_currency !== pageCurrency
+      ) {
+          // ...Do Not Render Anything
+          return null;
+      }
+
+      // Else Render
+      return h('div', {
+          class: 'module__foot',
+          style: { borderTop: '0', paddingTop: '0' }
+      }, [
+          histLow && currentPrice <= histLow
+              ? Point({}, [
+                  h('i', { class: 'ic icon-tick' }, ''),
+                  h('b', { style: { color: '#739c00' } }, 'HISTORICAL LOWEST PRICE.')
+              ])
+              : null
+          ,
+
+          curLow && currentPrice <= curLow
+              ? Point({}, [
+                  h('i', { class: 'ic icon-tick' }, ''),
+                  h('b', { style: { color: '#739c00' } }, 'CURRENT LOWEST PRICE.')
+              ])
+              : null ]);
+  }; };
+
+  var Container = function () { return function (state, actions) {
+      return h('div', {
+          oncreate: function () {
+              // Read Storage for Country & Region
+              actions.readAndSetFromStorage();
+
+              // Retrieve Price Data
+              actions.getAllPriceData();
+          }
+      }, [
+          state.currentLowest && state.historicalLow
+              ? Notifications()
+              : null
+          ,
+
+          state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
+              ? Stats()
+              : Spinner()
+          ,
+
+          state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
+              ? CountrySelect()
+              : null ]);
+  }; };
+
+  var eu1 = {
+  	AL: {
+  		name: "Albania",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	AD: {
+  		name: "Andorra",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	AT: {
+  		name: "Austria",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	BE: {
+  		name: "Belgium",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	DK: {
+  		name: "Denmark",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	FI: {
+  		name: "Finland",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	FR: {
+  		name: "France",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	DE: {
+  		name: "Germany",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	IE: {
+  		name: "Ireland",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	LI: {
+  		name: "Liechtenstein",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	LU: {
+  		name: "Luxembourg",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	MK: {
+  		name: "Macedonia",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	NL: {
+  		name: "Netherlands",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	SE: {
+  		name: "Sweden",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	CH: {
+  		name: "Switzerland",
+  		region_code: "eu1",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	}
+  };
+  var eu2 = {
+  	BA: {
+  		name: "Bosnia And Herzegovina",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	BG: {
+  		name: "Bulgaria",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	HR: {
+  		name: "Croatia",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	CY: {
+  		name: "Cyprus",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	CZ: {
+  		name: "Czech Republic",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	EE: {
+  		name: "Estonia",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	GR: {
+  		name: "Greece",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	VA: {
+  		name: "Holy See (Vatican City State)",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	HU: {
+  		name: "Hungary",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	IT: {
+  		name: "Italy",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	LV: {
+  		name: "Latvia",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	LT: {
+  		name: "Lithuania",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	MT: {
+  		name: "Malta",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	MC: {
+  		name: "Monaco",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	ME: {
+  		name: "Montenegro",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	NO: {
+  		name: "Norway",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	PL: {
+  		name: "Poland",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	PT: {
+  		name: "Portugal",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	RO: {
+  		name: "Romania",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	SM: {
+  		name: "San Marino",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	RS: {
+  		name: "Serbia",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	SK: {
+  		name: "Slovakia",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	SI: {
+  		name: "Slovenia",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	},
+  	ES: {
+  		name: "Spain",
+  		region_code: "eu2",
+  		currency: {
+  			code: "EUR",
+  			sign: "€",
+  			delimiter: ",",
+  			left: false,
+  			html: "&euro;"
+  		}
+  	}
+  };
+  var uk = {
+  	GB: {
+  		name: "United Kingdom",
+  		region_code: "uk",
+  		currency: {
+  			code: "GBP",
+  			sign: "£",
+  			delimiter: ".",
+  			left: true,
+  			html: "&pound;"
+  		}
+  	}
+  };
+  var us = {
+  	US: {
+  		name: "United States",
+  		region_code: "us",
+  		currency: {
+  			code: "USD",
+  			sign: "$",
+  			delimiter: ".",
+  			left: true,
+  			html: "$"
+  		}
+  	}
+  };
+  var ca = {
+  	CA: {
+  		name: "Canada",
+  		region_code: "ca",
+  		currency: {
+  			code: "CAD",
+  			sign: "$",
+  			delimiter: ".",
+  			left: true,
+  			html: "$"
+  		}
+  	}
+  };
+  var br = {
+  	BR: {
+  		name: "Brazil",
+  		region_code: "br",
+  		currency: {
+  			code: "USD",
+  			sign: "$",
+  			delimiter: ".",
+  			left: true,
+  			html: "$"
+  		}
+  	}
+  };
+  var au = {
+  	AU: {
+  		name: "Australia",
+  		region_code: "au",
+  		currency: {
+  			code: "USD",
+  			sign: "$",
+  			delimiter: ".",
+  			left: true,
+  			html: "$"
+  		}
+  	}
+  };
+  var ru = {
+  	RU: {
+  		name: "Russian Federation",
+  		region_code: "ru",
+  		currency: {
+  			code: "RUB",
+  			sign: "руб",
+  			delimiter: ",",
+  			left: false,
+  			html: " p."
+  		}
+  	}
+  };
+  var tr = {
+  	TR: {
+  		name: "Turkey",
+  		region_code: "tr",
+  		currency: {
+  			code: "TRY",
+  			sign: "TL",
+  			delimiter: ",",
+  			left: false,
+  			html: " TL"
+  		}
+  	}
+  };
+  var cn = {
+  	CN: {
+  		name: "China",
+  		region_code: "cn",
+  		currency: {
+  			code: "CNY",
+  			sign: "¥",
+  			delimiter: ".",
+  			left: true,
+  			html: "&yen;"
+  		}
+  	}
+  };
+  var region_map = {
+  	eu1: eu1,
+  	eu2: eu2,
+  	uk: uk,
+  	us: us,
+  	ca: ca,
+  	br: br,
+  	au: au,
+  	ru: ru,
+  	tr: tr,
+  	cn: cn
+  };
+
+  var createApp = function (game_id, container) {
+      // Hyperapp State & Actions
+      var state = {
+          game_id: game_id,
+          region_map: region_map,
+          user_region: 'us',
+          user_country: 'US',
+          currentLowest: null,
+          historicalLow: null,
+          historicalLowGOG: null,
+          bundles: null,
+          cache: {}
+      };
+
+      var view = function (state, actions$$1) { return Container(); };
+
       // Mount Hyperapp on Container
-      app({}, {}, view, egContainer);
+      app(state, actions, view, container);
   };
 
   /**
@@ -664,30 +1518,15 @@
       console.log(("== Enhanced GOG " + (config.VERSION) + " =="));
 
       setTimeout(function () {
+          // Get GOG Game ID from page
           var game_id = q('div.product-row--has-card').getAttribute('gog-product');
-      
-          itad.getPlainId(game_id)
-              .then(function (plain_id) {
-                  return Promise.all([
-                      itad.getHistoricalLow(plain_id),
-                      itad.getHistoricalLow(plain_id, 'gog'),
-                      itad.getCurrentLowest(plain_id),
-                      itad.getBundles(plain_id)
-                  ]);
-              })
-              .then(function (res) {
-                  renderStats({
-                      historicalLow: res[0],
-                      historicalLowGOG: res[1],
-                      currentLowest: res[2],
-                      bundles: res[3]
-                  });
-              })
-              .catch(function (err) {
-                  console.log(("Enhanced GOG - Error has occured: " + err));
-              })
-          ;
-      }, 800);
+
+          // Create and Append Container
+          var container = c('div', 'enhanced-gog-container');
+          q('header.module__top').insertAdjacentElement('afterend', container);
+
+          createApp(game_id, container);
+      }, 250);
   };
 
   /**

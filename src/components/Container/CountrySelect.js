@@ -8,7 +8,7 @@ export const CountrySelect = () => (state, actions) => {
     const region_map = state.region_map;
     const regions = Object.keys(region_map); // ['eu1', 'eu2', 'us', 'ca', ...]
 
-    return h('div', {}, [
+    return h('div', { class: 'module__foot' }, [
         Point({}, h('b', {}, 'Enhanced GOG Region')),
         Point({}, [
             h('select', {

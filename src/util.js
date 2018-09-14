@@ -13,7 +13,7 @@ const c = (tag, className, innerHTML = '') => {
 const createPriceFormatter = (sign, delimiter, left) => {
     return (price) => {
         const delimited_price = price.replace('.', delimiter);
-        return left ? `${sign}${delimited_price}` : `${delimited_price}${sign}`
+        return left ? `${sign}${delimited_price}` : `${delimited_price}${sign}`;
     };
 };
 

@@ -15,7 +15,8 @@ const createApp = (game_id, container) => {
         currentLowest: null,
         historicalLow: null,
         historicalLowGOG: null,
-        bundles: null
+        bundles: null,
+        cache: {}
     };
 
     const view = (state, actions) => Container();
@@ -39,7 +40,7 @@ const runUserScript = () => {
         q('header.module__top').insertAdjacentElement('afterend', container);
 
         createApp(game_id, container);
-    }, 800);
+    }, 250);
 };
 
 /**

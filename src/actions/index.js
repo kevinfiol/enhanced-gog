@@ -42,6 +42,20 @@ const setUserCountry = user_country => state => ({
     user_country
 });
 
+const cacheResults = payload => state => {
+    const newCache = Object.assign({}, state.cache);
+
+    if (newCache[payload.region]) {
+        newCache[payload.region][payload.country] = payload.results;
+    } else {
+        newCache[payload.region] = {
+            [payload.country]: payload.results
+        };
+    }
+
+    return { cache: newCache };
+};
+
 const readAndSetFromStorage = () => (state, actions) => {
     const user_region = storage.getValue('user_region');
     const user_country = storage.getValue('user_country');
@@ -60,25 +74,46 @@ const persistToStorage = item => () => {
 };
 
 const getAllPriceData = () => (state, actions) => {
-    itad.getPlainId(state.game_id)
-        .then(plain_id => {
-            return Promise.all([
-                itad.getHistoricalLow(plain_id, null, state.user_region, state.user_country),
-                itad.getHistoricalLow(plain_id, 'gog', state.user_region, state.user_country),
-                itad.getCurrentLowest(plain_id, state.user_region, state.user_country),
-                itad.getBundles(plain_id, state.user_region)
-            ]);
-        })
-        .then(res => {
-            actions.setHistoricalLow(res[0]);
-            actions.setHistoricalLowGOG(res[1]);
-            actions.setCurrentLowest(res[2]);
-            actions.setBundles(res[3]);
-        })
-        .catch(err => {
-            console.log(`== Enhanced GOG - Error has occured == ${ err }`);
-        })
-    ;
+    // Set all ITAD Stats
+    const setStats = res => {
+        actions.setHistoricalLow(res[0]);
+        actions.setHistoricalLowGOG(res[1]);
+        actions.setCurrentLowest(res[2]);
+        actions.setBundles(res[3]);
+    };
+
+    if (state.cache[state.user_region] &&
+        state.cache[state.user_region][state.user_country]
+    ) {
+        // Results exist in Cache
+        setStats(state.cache[state.user_region][state.user_country]);
+    } else {
+        // Results do not exist in Cache
+        // Retrieve from ITAD
+        itad.getPlainId(state.game_id)
+            .then(plain_id => {
+                return Promise.all([
+                    itad.getHistoricalLow(plain_id, null, state.user_region, state.user_country),
+                    itad.getHistoricalLow(plain_id, 'gog', state.user_region, state.user_country),
+                    itad.getCurrentLowest(plain_id, state.user_region, state.user_country),
+                    itad.getBundles(plain_id, state.user_region)
+                ]);
+            })
+            .then(res => {
+                setStats(res);
+
+                // Cache Results
+                actions.cacheResults({
+                    region: state.user_region,
+                    country: state.user_country,
+                    results: res
+                });
+            })
+            .catch(err => {
+                console.log(`== Enhanced GOG - Error has occured == ${ err }`);
+            })
+        ;
+    }
 };
 
 export const actions = {
@@ -91,5 +126,6 @@ export const actions = {
     setUserRegion,
     setUserCountry,
     readAndSetFromStorage,
-    persistToStorage
+    persistToStorage,
+    cacheResults
 };
