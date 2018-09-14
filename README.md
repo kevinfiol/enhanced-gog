@@ -12,7 +12,7 @@ A userscript that aims to improve the overall experience browsing [GOG.com](http
 
 Data graciously provided by [IsThereAnyDeal](https://isthereanydeal.com).
 
-![screenshot](https://images2.imgbox.com/09/10/lJds3wZk_o.jpg)
+![screenshot](https://images2.imgbox.com/64/11/Mas22Ujh_o.jpg)
 
 ## Install
 
