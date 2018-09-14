@@ -9,6 +9,7 @@ A userscript that aims to improve the overall experience browsing [GOG.com](http
 * All-time historically lowest price
 * All-time historically lowest price from GOG.com itself
 * Number of times a game has been in a video game bundle
+* A Country & Region selector to dynamically load latest price data
 
 Data graciously provided by [IsThereAnyDeal](https://isthereanydeal.com).
 
