@@ -2,10 +2,10 @@ import { h } from 'hyperapp';
 import { Point } from 'components/Point';
 
 export const Spinner = () => () => {
-    return h('div', { class: 'module__foot' }, [
-        Point({ style: { padding: '1.2em 0' } }, [
+    return h('div', { style: { textAlign: 'center', width: '100%' } }, [
+        Point({ style: { padding: '1.5em 0 0.3em 0' } }, [
             h('span', {
-                class: 'module-bottom__spinner spinner--small is-spinning'
+                class: 'menu-friends-empty__spinner is-spinning'
             })
         ])
     ])

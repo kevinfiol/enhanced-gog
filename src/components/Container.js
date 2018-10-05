@@ -1,4 +1,5 @@
 import { h } from 'hyperapp';
+import { Divider } from 'components/Divider';
 import { Spinner } from 'components/Spinner';
 import { Stats } from 'components/Container/Stats';
 import { CountrySelect } from 'components/Container/CountrySelect';
@@ -14,19 +15,23 @@ export const Container = () => (state, actions) => {
             actions.getAllPriceData();
         }
     }, [
-        state.currentLowest && state.historicalLow
-            ? Notifications()
-            : null
-        ,
+        Divider(),
 
-        state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
-            ? Stats()
-            : Spinner()
-        ,
+        h('div', { style: { paddingTop: '1.2em' } }, [
+            state.currentLowest && state.historicalLow
+                ? Notifications()
+                : null
+            ,
 
-        state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
-            ? CountrySelect()
-            : null
-        ,
+            state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
+                ? Stats()
+                : Spinner()
+            ,
+
+            state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
+                ? CountrySelect()
+                : null
+            ,
+        ])
     ]);
 };
