@@ -5,10 +5,12 @@ import { actions } from 'actions/index';
 import { Container } from 'components/Container';
 import region_map from './data/region_map.json';
 
-const createApp = (game_id, container) => {
+const createApp = (game_id, currentPrice, pageCurrency, container) => {
     // Hyperapp State & Actions
     const state = {
         game_id,
+        currentPrice,
+        pageCurrency,
         region_map,
         user_region: 'us',
         user_country: 'US',
@@ -30,24 +32,18 @@ const createApp = (game_id, container) => {
  */
 const runUserScript = () => {
     console.log(`== Enhanced GOG ${ config.VERSION } ==`);
+    const product = unsafeWindow.productcardData;
 
-    setTimeout(() => {
-        // Get GOG Game ID from page
-        const game_id = q('div.product-row--has-card').getAttribute('gog-product');
+    if (product !== undefined) {
+        const game_id = product.cardProductId;
+        const currentPrice = product.cardProduct.price.finalAmount;
+        const pageCurrency = product.currency;
 
-        // Create and Append Container
         const container = c('div', 'enhanced-gog-container');
-        q('header.module__top').insertAdjacentElement('afterend', container);
-
-        createApp(game_id, container);
-    }, 250);
+        q('div.product-actions').appendChild(container);
+        
+        createApp(game_id, currentPrice, pageCurrency, container);
+    }
 };
 
-/**
- * Check if DOM is ready
- */
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', runUserScript);
-} else {
-    runUserScript();
-}
+runUserScript();

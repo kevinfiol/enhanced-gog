@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://gitlab.com/kevinfiol/enhanced-gog
-// @version 1.1.0
+// @version 1.1.1
 // @description Enhanced experience on GOG.com
 // @license MIT; https://gitlab.com/kevinfiol/enhanced-gog/blob/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -9,6 +9,7 @@
 // @icon https://images2.imgbox.com/82/de/Rz3uTP3A_o.png
 // @updateURL https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js
 // @downloadURL https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js
+// @run-at document-idle
 // @grant GM_xmlhttpRequest
 // @grant GM.xmlHttpRequest
 // @grant GM_getValue
@@ -425,7 +426,7 @@
   }
 
   var config = {
-      VERSION: '1.1.0',
+      VERSION: '1.1.1',
       BASE_URL: 'https://api.isthereanydeal.com',
       API_KEY: 'd047b30e0fc7d9118f3953de04fa6af9eba22379'
   };
@@ -762,19 +763,32 @@
       cacheResults: cacheResults
   };
 
-  var Point = function (attrs, children) { return function () { return h('p', Object.assign({ class: 'buy-footer-info-point' }, attrs), children); }; };
+  var Divider = function () { return function () {
+      return h('div', {
+          style: {
+              boxShadow: '0px 4px 6px -2px rgba(0, 0, 0, 0.25)',
+              height: '14px',
+              position: 'absolute',
+              left: '0',
+              // border: '1px solid transparent',
+              width: '100%'
+          }
+      });
+  }; };
+
+  var Point = function (attrs, children) { return function () { return h('p', Object.assign({ class: '' }, attrs), children); }; };
 
   var Spinner = function () { return function () {
-      return h('div', { class: 'module__foot' }, [
-          Point({ style: { padding: '1.2em 0' } }, [
+      return h('div', { style: { textAlign: 'center', width: '100%' } }, [
+          Point({ style: { padding: '1.5em 0 0.3em 0' } }, [
               h('span', {
-                  class: 'module-bottom__spinner spinner--small is-spinning'
+                  class: 'menu-friends-empty__spinner is-spinning'
               })
           ])
       ])
   }; };
 
-  var Link = function (href, text) { return function () { return h('a', { class: 'un', href: href }, text); }; };
+  var Link = function (href, text) { return function () { return h('a', { style: { textDecoration: 'underline' }, href: href }, text); }; };
 
   var CurrentLowest = function () { return function (state) {
       var data = state.currentLowest;
@@ -825,7 +839,7 @@
   }; };
 
   var Stats = function () { return function (state, actions) {
-      return h('div', { class: 'module__foot' }, [
+      return h('div', { style: { fontSize: '13px', margin: '1em 0', lineHeight: '1.7em' } }, [
           state.currentLowest    ? CurrentLowest()    : null,
           state.historicalLow    ? HistoricalLow()    : null,
           state.historicalLowGOG ? HistoricalLowGOG() : null,
@@ -840,10 +854,12 @@
       var region_map = state.region_map;
       var regions = Object.keys(region_map); // ['eu1', 'eu2', 'us', 'ca', ...]
 
-      return h('div', { class: 'module__foot' }, [
+      return h('div', { style: { margin: '1em 0 0 0', fontSize: '13px' } }, [
           Point({}, h('b', {}, 'Enhanced GOG Region')),
           Point({}, [
               h('select', {
+                  style: { border: '1px solid #cecece', padding: '0.4em', margin: '0.5em 0 0 0', backgroundColor: '#f6f6f6' },
+
                   oncreate: function (el) {
                       el.value = (state.user_region) + "-" + (state.user_country);
                   },
@@ -879,17 +895,14 @@
   }; };
 
   var Notifications = function () { return function (state, actions) {
-      var currentPrice = parseFloat( q('meta[itemprop="price"]').getAttribute('content') );
-      var pageCurrency = q('meta[itemprop="priceCurrency"]').getAttribute('content');
-
       var histLow = state.historicalLow.price || null;
       var curLow = state.currentLowest.price_new || null;
       var user_currency = state.region_map[state.user_region][state.user_country].currency.code;
       
       if (// If price is neither Historical Low or Current Low
-          !( (histLow && currentPrice <= histLow) || (curLow && currentPrice <= curLow) )
+          !( (histLow && state.currentPrice <= histLow) || (curLow && state.currentPrice <= curLow) )
           // Or If Enhanced GOG's Currency does not match the Page's Currency
-          || user_currency !== pageCurrency
+          || user_currency !== state.pageCurrency
       ) {
           // ...Do Not Render Anything
           return null;
@@ -897,21 +910,20 @@
 
       // Else Render
       return h('div', {
-          class: 'module__foot',
-          style: { borderTop: '0', paddingTop: '0' }
+          style: { margin: '0.8em 0', lineHeight: '1.5em' }
       }, [
-          histLow && currentPrice <= histLow
+          histLow && state.currentPrice <= histLow
               ? Point({}, [
-                  h('i', { class: 'ic icon-tick' }, ''),
-                  h('b', { style: { color: '#739c00' } }, 'HISTORICAL LOWEST PRICE.')
+                  h('i', { class: '' }, ''),
+                  h('b', { style: { color: '#739c00' } }, '✓  HISTORICAL LOWEST PRICE.')
               ])
               : null
           ,
 
-          curLow && currentPrice <= curLow
+          curLow && state.currentPrice <= curLow
               ? Point({}, [
-                  h('i', { class: 'ic icon-tick' }, ''),
-                  h('b', { style: { color: '#739c00' } }, 'CURRENT LOWEST PRICE.')
+                  h('i', { class: '' }, ''),
+                  h('b', { style: { color: '#739c00' } }, '✓  CURRENT LOWEST PRICE.')
               ])
               : null ]);
   }; };
@@ -926,19 +938,23 @@
               actions.getAllPriceData();
           }
       }, [
-          state.currentLowest && state.historicalLow
-              ? Notifications()
-              : null
-          ,
+          Divider(),
 
-          state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
-              ? Stats()
-              : Spinner()
-          ,
+          h('div', { style: { paddingTop: '1.2em' } }, [
+              state.currentLowest && state.historicalLow
+                  ? Notifications()
+                  : null
+              ,
 
-          state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
-              ? CountrySelect()
-              : null ]);
+              state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
+                  ? Stats()
+                  : Spinner()
+              ,
+
+              state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
+                  ? CountrySelect()
+                  : null ])
+      ]);
   }; };
 
   var eu1 = {
@@ -1491,10 +1507,12 @@
   	cn: cn
   };
 
-  var createApp = function (game_id, container) {
+  var createApp = function (game_id, currentPrice, pageCurrency, container) {
       // Hyperapp State & Actions
       var state = {
           game_id: game_id,
+          currentPrice: currentPrice,
+          pageCurrency: pageCurrency,
           region_map: region_map,
           user_region: 'us',
           user_country: 'US',
@@ -1516,26 +1534,20 @@
    */
   var runUserScript = function () {
       console.log(("== Enhanced GOG " + (config.VERSION) + " =="));
+      var product = unsafeWindow.productcardData;
 
-      setTimeout(function () {
-          // Get GOG Game ID from page
-          var game_id = q('div.product-row--has-card').getAttribute('gog-product');
+      if (product !== undefined) {
+          var game_id = product.cardProductId;
+          var currentPrice = product.cardProduct.price.finalAmount;
+          var pageCurrency = product.currency;
 
-          // Create and Append Container
           var container = c('div', 'enhanced-gog-container');
-          q('header.module__top').insertAdjacentElement('afterend', container);
-
-          createApp(game_id, container);
-      }, 250);
+          q('div.product-actions').appendChild(container);
+          
+          createApp(game_id, currentPrice, pageCurrency, container);
+      }
   };
 
-  /**
-   * Check if DOM is ready
-   */
-  if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', runUserScript);
-  } else {
-      runUserScript();
-  }
+  runUserScript();
 
 }());

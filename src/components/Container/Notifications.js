@@ -3,17 +3,14 @@ import { q, c } from 'util';
 import { Point } from 'components/Point';
 
 export const Notifications = () => (state, actions) => {
-    let currentPrice = parseFloat( q('meta[itemprop="price"]').getAttribute('content') );
-    let pageCurrency = q('meta[itemprop="priceCurrency"]').getAttribute('content');
-
     const histLow = state.historicalLow.price || null;
     const curLow = state.currentLowest.price_new || null;
     const user_currency = state.region_map[state.user_region][state.user_country].currency.code;
     
     if (// If price is neither Historical Low or Current Low
-        !( (histLow && currentPrice <= histLow) || (curLow && currentPrice <= curLow) )
+        !( (histLow && state.currentPrice <= histLow) || (curLow && state.currentPrice <= curLow) )
         // Or If Enhanced GOG's Currency does not match the Page's Currency
-        || user_currency !== pageCurrency
+        || user_currency !== state.pageCurrency
     ) {
         // ...Do Not Render Anything
         return null;
@@ -21,21 +18,20 @@ export const Notifications = () => (state, actions) => {
 
     // Else Render
     return h('div', {
-        class: 'module__foot',
-        style: { borderTop: '0', paddingTop: '0' }
+        style: { margin: '0.8em 0', lineHeight: '1.5em' }
     }, [
-        histLow && currentPrice <= histLow
+        histLow && state.currentPrice <= histLow
             ? Point({}, [
-                h('i', { class: 'ic icon-tick' }, ''),
-                h('b', { style: { color: '#739c00' } }, 'HISTORICAL LOWEST PRICE.')
+                h('i', { class: '' }, ''),
+                h('b', { style: { color: '#739c00' } }, '✓  HISTORICAL LOWEST PRICE.')
             ])
             : null
         ,
 
-        curLow && currentPrice <= curLow
+        curLow && state.currentPrice <= curLow
             ? Point({}, [
-                h('i', { class: 'ic icon-tick' }, ''),
-                h('b', { style: { color: '#739c00' } }, 'CURRENT LOWEST PRICE.')
+                h('i', { class: '' }, ''),
+                h('b', { style: { color: '#739c00' } }, '✓  CURRENT LOWEST PRICE.')
             ])
             : null
         ,
