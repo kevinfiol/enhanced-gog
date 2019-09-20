@@ -15,7 +15,7 @@ A userscript that aims to improve the overall experience browsing [GOG.com](http
 
 Data graciously provided by [IsThereAnyDeal](https://isthereanydeal.com).
 
-![screenshot](https://i.lensdump.com/i/ArJKn0.jpg)
+![screenshot](https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/img/icon.jpg)
 
 ## Install
 
@@ -26,4 +26,4 @@ Data graciously provided by [IsThereAnyDeal](https://isthereanydeal.com).
 
 Note: I recommend Violentmonkey since it is Free, Open-Source, and light on system resources. Tampermonkey is good, but it is proprietary. Meanwhile, Greasemonkey since Greasemonkey 4 is [unable to automatically update userscripts](https://github.com/greasemonkey/greasemonkey/issues/2531).
 
-2. **[Click here to install the userscript](https://gitlab.com/kevinfiol/enhanced-gog/raw/master/bin/enhanced-gog.user.js)**
+2. **[Click here to install the userscript](https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/bin/enhanced-gog.user.js)**
