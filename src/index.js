@@ -18,7 +18,8 @@ const createApp = (game_id, currentPrice, pageCurrency, container) => {
         historicalLow: null,
         historicalLowGOG: null,
         bundles: null,
-        cache: {}
+        cache: {},
+        error: null
     };
 
     const view = (state, actions) => Container();

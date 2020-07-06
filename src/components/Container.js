@@ -4,6 +4,7 @@ import { Spinner } from 'components/Spinner';
 import { Stats } from 'components/Container/Stats';
 import { CountrySelect } from 'components/Container/CountrySelect';
 import { Notifications } from 'components/Container/Notifications';
+import { Error } from 'components/Container/Error';
 
 export const Container = () => (state, actions) => {
     return h('div', {
@@ -25,13 +26,12 @@ export const Container = () => (state, actions) => {
 
             state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
                 ? Stats()
-                : Spinner()
+                : state.error
+                    ? Error()
+                    : Spinner()
             ,
 
-            state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
-                ? CountrySelect()
-                : null
-            ,
+            CountrySelect()
         ])
     ]);
 };

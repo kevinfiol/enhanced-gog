@@ -11,6 +11,10 @@ const storage = Storage();
 /**
  * Actions
  */
+const setError = error => () => ({
+    error
+});
+
 const setStatsToNull = () => state => ({
     historicalLow: null,
     historicalLowGOG: null,
@@ -82,6 +86,8 @@ const getAllPriceData = () => (state, actions) => {
         actions.setBundles(res[3]);
     };
 
+    actions.setError(null);
+
     if (state.cache[state.user_region] &&
         state.cache[state.user_region][state.user_country]
     ) {
@@ -110,6 +116,7 @@ const getAllPriceData = () => (state, actions) => {
                 });
             })
             .catch(err => {
+                actions.setError(err);
                 console.log(`== Enhanced GOG - Error has occured == ${ err }`);
             })
         ;
@@ -117,6 +124,7 @@ const getAllPriceData = () => (state, actions) => {
 };
 
 export const actions = {
+    setError,
     getAllPriceData,
     setStatsToNull,
     setCurrentLowest,

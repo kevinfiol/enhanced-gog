@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.1.2
+// @version 1.1.3
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -426,7 +426,7 @@
   }
 
   var config = {
-      VERSION: '1.1.2',
+      VERSION: '1.1.3',
       BASE_URL: 'https://api.isthereanydeal.com',
       API_KEY: 'd047b30e0fc7d9118f3953de04fa6af9eba22379'
   };
@@ -644,6 +644,10 @@
   /**
    * Actions
    */
+  var setError = function (error) { return function () { return ({
+      error: error
+  }); }; };
+
   var setStatsToNull = function () { return function (state) { return ({
       historicalLow: null,
       historicalLowGOG: null,
@@ -715,6 +719,8 @@
           actions.setBundles(res[3]);
       };
 
+      actions.setError(null);
+
       if (state.cache[state.user_region] &&
           state.cache[state.user_region][state.user_country]
       ) {
@@ -743,6 +749,7 @@
                   });
               })
               .catch(function (err) {
+                  actions.setError(err);
                   console.log(("== Enhanced GOG - Error has occured == " + err));
               })
           ;
@@ -750,6 +757,7 @@
   }; };
 
   var actions = {
+      setError: setError,
       getAllPriceData: getAllPriceData,
       setStatsToNull: setStatsToNull,
       setCurrentLowest: setCurrentLowest,
@@ -838,7 +846,7 @@
       ]);
   }; };
 
-  var Stats = function () { return function (state, actions) {
+  var Stats = function () { return function (state) {
       return h('div', { style: { fontSize: '13px', margin: '1em 0', lineHeight: '1.7em' } }, [
           state.currentLowest    ? CurrentLowest()    : null,
           state.historicalLow    ? HistoricalLow()    : null,
@@ -928,6 +936,16 @@
               : null ]);
   }; };
 
+  var Error = function () { return function (state, actions) {
+      return h('div', { style: { padding: '1em' } }, [
+          h('span', null, 'Woops. Enhanced GOG encountered an error. Try another region or '),
+          h('a', {
+              style: { textDecoration: 'underline', cursor: 'pointer'},
+              onclick: function () { return actions.getAllPriceData(); }
+          }, 'click here to try again.')
+      ]);
+  }; };
+
   var Container = function () { return function (state, actions) {
       return h('div', {
           oncreate: function () {
@@ -948,12 +966,13 @@
 
               state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
                   ? Stats()
-                  : Spinner()
+                  : state.error
+                      ? Error()
+                      : Spinner()
               ,
 
-              state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
-                  ? CountrySelect()
-                  : null ])
+              CountrySelect()
+          ])
       ]);
   }; };
 
@@ -1429,25 +1448,25 @@
   		}
   	}
   };
-  var br = {
-  	BR: {
+  var br2 = {
+  	BR2: {
   		name: "Brazil",
-  		region_code: "br",
+  		region_code: "br2",
   		currency: {
-  			code: "USD",
-  			sign: "$",
+  			code: "BRL",
+  			sign: "R$",
   			delimiter: ".",
   			left: true,
-  			html: "$"
+  			html: "R$"
   		}
   	}
   };
-  var au = {
-  	AU: {
+  var au2 = {
+  	AU2: {
   		name: "Australia",
-  		region_code: "au",
+  		region_code: "au2",
   		currency: {
-  			code: "USD",
+  			code: "AUD",
   			sign: "$",
   			delimiter: ".",
   			left: true,
@@ -1500,8 +1519,8 @@
   	uk: uk,
   	us: us,
   	ca: ca,
-  	br: br,
-  	au: au,
+  	br2: br2,
+  	au2: au2,
   	ru: ru,
   	tr: tr,
   	cn: cn
@@ -1520,7 +1539,8 @@
           historicalLow: null,
           historicalLowGOG: null,
           bundles: null,
-          cache: {}
+          cache: {},
+          error: null
       };
 
       var view = function (state, actions$$1) { return Container(); };
