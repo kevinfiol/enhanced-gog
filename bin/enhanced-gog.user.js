@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.1.3
+// @version 1.2.0
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -426,7 +426,7 @@
   }
 
   var config = {
-      VERSION: '1.1.3',
+      VERSION: '1.2.0',
       BASE_URL: 'https://api.isthereanydeal.com',
       API_KEY: 'd047b30e0fc7d9118f3953de04fa6af9eba22379'
   };
@@ -828,11 +828,11 @@
       var data = state.historicalLowGOG;
       var currency = state.region_map[state.user_region][state.user_country].currency;
       var formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
-      
+
       return Point({}, [
           h('b', {}, 'Historical Lowest Price on GOG: '),
           ((formatPrice(data.price.toFixed(2))) + " on " + (data.date) + " "),
-          '(', Link(data.urls.history, 'Info'), ')'
+          '(', Link(data.urls.history + '?shop[]=gog&generate=Select+Stores', 'Info'), ')'
       ]);
   }; };
 

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "enhances gog web experience",
   "main": "src/index.js",
-  "author": "keb",
+  "author": "kevinfiol",
   "license": "MIT",
   "scripts": {
     "build": "rollup -c --environment PROD",

@@ -7,10 +7,10 @@ export const HistoricalLowGOG = () => state => {
     const data = state.historicalLowGOG;
     const currency = state.region_map[state.user_region][state.user_country].currency;
     const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
-    
+
     return Point({}, [
         h('b', {}, 'Historical Lowest Price on GOG: '),
         `${ formatPrice(data.price.toFixed(2)) } on ${ data.date } `,
-        '(', Link(data.urls.history, 'Info'), ')'
+        '(', Link(data.urls.history + '?shop[]=gog&generate=Select+Stores', 'Info'), ')'
     ]);
 };
