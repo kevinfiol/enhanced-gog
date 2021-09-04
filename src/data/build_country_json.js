@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 const countries = JSON.parse(fs.readFileSync('iso_countries.json', 'utf8'));
 const regions = JSON.parse(fs.readFileSync('itad_regions.json', 'utf8'));

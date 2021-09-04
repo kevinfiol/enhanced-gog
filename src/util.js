@@ -1,25 +1,25 @@
 /**
  * DOM Methods
  */
-const q = query => document.querySelector(query);
+export const q = query => document.querySelector(query);
 
-const c = (tag, className, innerHTML = '') => {
+export const c = (tag, className, innerHTML = '') => {
     const el = document.createElement(tag);
     el.className = className;
     el.innerHTML = innerHTML;
     return el;
 };
 
-const createPriceFormatter = (sign, delimiter, left) => {
+export const createPriceFormatter = (sign, delimiter, left) => {
     return (price) => {
         const delimited_price = price.replace('.', delimiter);
         return left ? `${sign}${delimited_price}` : `${delimited_price}${sign}`;
     };
 };
 
-const capitalize = str => str.trim()[0].toUpperCase() + str.trim().slice(1);
+export const capitalize = str => str.trim()[0].toUpperCase() + str.trim().slice(1);
 
-const getDateStr = unixTime => {
+export const getDateStr = unixTime => {
     const date = new Date(unixTime * 1000);
     const month = date.getMonth() + 1;
     const day = date.getDate();
@@ -28,7 +28,7 @@ const getDateStr = unixTime => {
     return `${month}/${day}/${year}`;
 };
 
-const request = (method, url, params) => {
+export const request = (method, url, params) => {
     const queryArr = Object.keys(params).map(key => {
         return `${ encodeURIComponent(key) }=${ encodeURIComponent(params[key]) }`;
     });
@@ -68,5 +68,3 @@ const request = (method, url, params) => {
         }
     });
 };
-
-export { q, c, createPriceFormatter, capitalize, getDateStr, request }

@@ -1,6 +1,6 @@
 import { h } from 'hyperapp';
-import { Point } from 'components/Point';
-import { Link } from 'components/Link';
+import { Point } from '../../Point';
+import { Link } from '../../Link';
 
 export const Bundles = () => state => {
     const data = state.bundles;

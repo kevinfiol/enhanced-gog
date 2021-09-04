@@ -1,7 +1,7 @@
 import { h } from 'hyperapp';
-import { Point } from 'components/Point';
-import { Link } from 'components/Link';
-import { createPriceFormatter } from 'util';
+import { Point } from '../../Point';
+import { Link } from '../../Link';
+import { createPriceFormatter } from '../../../util';
 
 export const CurrentLowest = () => state => {
     const data = state.currentLowest;

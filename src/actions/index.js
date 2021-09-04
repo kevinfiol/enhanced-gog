@@ -1,6 +1,6 @@
-import { config } from 'config';
-import IsThereAnyDeal from 'services/IsThereAnyDeal';
-import Storage from 'services/Storage';
+import { config } from '../config';
+import IsThereAnyDeal from '../services/IsThereAnyDeal';
+import Storage from '../services/Storage';
 
 /**
  * Dependencies

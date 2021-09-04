@@ -1,8 +1,8 @@
 import { h, app } from 'hyperapp';
-import { config } from 'config';
-import { q, c } from 'util';
-import { actions } from 'actions/index';
-import { Container } from 'components/Container';
+import { config } from './config';
+import { q, c } from './util';
+import { actions } from './actions/index';
+import { Container } from './components/Container';
 import region_map from './data/region_map.json';
 
 const createApp = (game_id, currentPrice, pageCurrency, container) => {

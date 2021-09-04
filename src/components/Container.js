@@ -1,10 +1,10 @@
 import { h } from 'hyperapp';
-import { Divider } from 'components/Divider';
-import { Spinner } from 'components/Spinner';
-import { Stats } from 'components/Container/Stats';
-import { CountrySelect } from 'components/Container/CountrySelect';
-import { Notifications } from 'components/Container/Notifications';
-import { Error } from 'components/Container/Error';
+import { Divider } from './Divider';
+import { Spinner } from './Spinner';
+import { Stats } from './Container/Stats';
+import { CountrySelect } from './Container/CountrySelect';
+import { Notifications } from './Container/Notifications';
+import { Error } from './Container/Error';
 
 export const Container = () => (state, actions) => {
     return h('div', {

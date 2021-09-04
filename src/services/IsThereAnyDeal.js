@@ -1,8 +1,6 @@
-const capitalize = require('../util').capitalize;
-const getDateStr = require('../util').getDateStr;
-const request = require('../util').request;
+import { capitalize, getDateStr, request } from '../util';
 
-module.exports = (base_url, api_key) => {
+const IsThereAnyDeal = (base_url, api_key) => {
     const shop = 'gog';
 
     const template = (version, iface, method) => {
@@ -105,3 +103,5 @@ module.exports = (base_url, api_key) => {
         getBundles
     };
 };
+
+export default IsThereAnyDeal;

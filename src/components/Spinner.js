@@ -1,5 +1,5 @@
 import { h } from 'hyperapp';
-import { Point } from 'components/Point';
+import { Point } from './Point';
 
 export const Spinner = () => () => {
     return h('div', { style: { textAlign: 'center', width: '100%' } }, [
