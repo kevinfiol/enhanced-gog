@@ -1,7 +1,6 @@
-Enhanced GOG Userscript
-===
+# Enhanced GOG Userscript
 
-## Description
+![screenshot](https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/img/screenshot.jpg)
 
 ### [GOG Community Discussion Thread](https://www.gog.com/forum/general/enhanced_gog_userscript_adds_isthereanydeal_integration_to_game_pages)
 
@@ -14,8 +13,6 @@ A userscript that aims to improve the overall experience browsing [GOG.com](http
 * A Country & Region selector to dynamically load latest price data
 
 Data graciously provided by [IsThereAnyDeal](https://isthereanydeal.com).
-
-![screenshot](https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/img/screenshot.jpg)
 
 ## Install
 
