@@ -782,3 +782,4 @@
   };
   runUserScript();
 })();
+//# sourceMappingURL=enhanced-gog.user.js.map

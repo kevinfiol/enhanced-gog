@@ -10,12 +10,11 @@
     "node": "14.16.x"
   },
   "scripts": {
-    "dev": "watchlist src --eager -- npm run build",
+    "dev": "node ./scripts/dev.js",
     "build": "node ./scripts/build.js"
   },
   "devDependencies": {
-    "esbuild": "^0.12.25",
-    "watchlist": "^0.3.1"
+    "esbuild": "^0.12.25"
   },
   "dependencies": {
     "hyperapp": "^1.2.9"
