@@ -1,0 +1,74 @@
+{
+    "EUR":
+    {
+        "code": "EUR",
+        "sign": "€",
+        "delimiter": ",",
+        "left": false,
+        "html": "&euro;"
+    },
+    "GBP":
+    {
+        "code": "GBP",
+        "sign": "£",
+        "delimiter": ".",
+        "left": true,
+        "html": "&pound;"
+    },
+    "USD":
+    {
+        "code": "USD",
+        "sign": "$",
+        "delimiter": ".",
+        "left": true,
+        "html": "$"
+    },
+    "CAD":
+    {
+        "code": "CAD",
+        "sign": "$",
+        "delimiter": ".",
+        "left": true,
+        "html": "$"
+    },
+    "BRL":
+    {
+        "code": "BRL",
+        "sign": "R$",
+        "delimiter": ".",
+        "left": true,
+        "html": "R$"
+    },
+    "AUD":
+    {
+        "code": "AUD",
+        "sign": "$",
+        "delimiter": ".",
+        "left": true,
+        "html": "$"
+    },
+    "RUB":
+    {
+        "code": "RUB",
+        "sign": "руб",
+        "delimiter": ",",
+        "left": false,
+        "html": " p."
+    },
+    "TRY":
+    {
+        "code": "TRY",
+        "sign": "TL",
+        "delimiter": ",",
+        "left": false,
+        "html": " TL"
+    },
+    "CNY":
+    {
+        "code": "CNY",
+        "sign": "¥",
+        "delimiter": ".",
+        "left": true,
+        "html": "&yen;"
+    }
+}
