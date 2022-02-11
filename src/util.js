@@ -10,12 +10,6 @@ export const c = (tag, className, innerHTML = '') => {
     return el;
 };
 
-export const style = (el, styles) => {
-    Object.entries(styles).map(([prop, value]) => {
-        el.style[prop] = value;
-    });
-};
-
 export const createPriceFormatter = (sign, delimiter, left) => {
     return (price) => {
         const delimited_price = price.replace('.', delimiter);
@@ -34,7 +28,7 @@ export const getDateStr = unixTime => {
     return `${month}/${day}/${year}`;
 };
 
-export const request = (method, url, params = {}) => {
+export const request = (method, url, params) => {
     const queryArr = Object.keys(params).map(key => {
         return `${ encodeURIComponent(key) }=${ encodeURIComponent(params[key]) }`;
     });
@@ -52,10 +46,10 @@ export const request = (method, url, params = {}) => {
                     if (res.status >= 200 && res.status < 300) {
                         resolve(res.responseText);
                     } else {
-                        reject(res);
+                        reject(res.statusText);
                     }
                 },
-                onerror: err => reject(err)
+                onerror: err => reject(err.statusText)
             });
         } else {
             const xhr = new XMLHttpRequest();

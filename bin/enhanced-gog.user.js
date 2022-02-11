@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.0
+// @version 1.3.1
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -139,11 +139,11 @@
           if (typeof oldValue === "string")
             oldValue = element.style.cssText = "";
           for (var i in clone(oldValue, value)) {
-            var style2 = value == null || value[i] == null ? "" : value[i];
+            var style = value == null || value[i] == null ? "" : value[i];
             if (i[0] === "-") {
-              element.style.setProperty(i, style2);
+              element.style.setProperty(i, style);
             } else {
-              element.style[i] = style2;
+              element.style[i] = style;
             }
           }
         }
@@ -307,7 +307,7 @@
 
   // src/config.js
   var config = {
-    VERSION: "1.4.0",
+    VERSION: "1.3.0",
     BASE_URL: "https://api.isthereanydeal.com",
     API_KEY: "d047b30e0fc7d9118f3953de04fa6af9eba22379"
   };
@@ -319,11 +319,6 @@
     el.className = className;
     el.innerHTML = innerHTML;
     return el;
-  };
-  var style = (el, styles) => {
-    Object.entries(styles).map(([prop, value]) => {
-      el.style[prop] = value;
-    });
   };
   var createPriceFormatter = (sign, delimiter, left) => {
     return (price) => {
@@ -339,7 +334,7 @@
     const year = date.getFullYear();
     return `${month}/${day}/${year}`;
   };
-  var request = (method, url, params = {}) => {
+  var request = (method, url, params) => {
     const queryArr = Object.keys(params).map((key) => {
       return `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
     });
@@ -354,10 +349,10 @@
             if (res.status >= 200 && res.status < 300) {
               resolve(res.responseText);
             } else {
-              reject(res);
+              reject(res.statusText);
             }
           },
-          onerror: (err) => reject(err)
+          onerror: (err) => reject(err.statusText)
         });
       } else {
         const xhr = new XMLHttpRequest();
@@ -460,91 +455,6 @@
   };
   var Storage_default = Storage;
 
-  // src/services/PriceService.js
-  var PriceService = {
-    getPrices(product_id, country_code) {
-      const endpoint = `https://api.gog.com/products/${product_id}/prices`;
-      return request("GET", endpoint, { countryCode: country_code }).then(JSON.parse);
-    }
-  };
-  var PriceService_default = PriceService;
-
-  // src/data/currencies.json
-  var EUR = {
-    code: "EUR",
-    sign: "\u20AC",
-    delimiter: ",",
-    left: false,
-    html: "&euro;"
-  };
-  var GBP = {
-    code: "GBP",
-    sign: "\xA3",
-    delimiter: ".",
-    left: true,
-    html: "&pound;"
-  };
-  var USD = {
-    code: "USD",
-    sign: "$",
-    delimiter: ".",
-    left: true,
-    html: "$"
-  };
-  var CAD = {
-    code: "CAD",
-    sign: "$",
-    delimiter: ".",
-    left: true,
-    html: "$"
-  };
-  var BRL = {
-    code: "BRL",
-    sign: "R$",
-    delimiter: ".",
-    left: true,
-    html: "R$"
-  };
-  var AUD = {
-    code: "AUD",
-    sign: "$",
-    delimiter: ".",
-    left: true,
-    html: "$"
-  };
-  var RUB = {
-    code: "RUB",
-    sign: "\u0440\u0443\u0431",
-    delimiter: ",",
-    left: false,
-    html: " p."
-  };
-  var TRY = {
-    code: "TRY",
-    sign: "TL",
-    delimiter: ",",
-    left: false,
-    html: " TL"
-  };
-  var CNY = {
-    code: "CNY",
-    sign: "\xA5",
-    delimiter: ".",
-    left: true,
-    html: "&yen;"
-  };
-  var currencies_default = {
-    EUR,
-    GBP,
-    USD,
-    CAD,
-    BRL,
-    AUD,
-    RUB,
-    TRY,
-    CNY
-  };
-
   // src/actions/index.js
   var itad = IsThereAnyDeal_default(config.BASE_URL, config.API_KEY);
   var storage = Storage_default();
@@ -556,9 +466,6 @@
     historicalLowGOG: null,
     currentLowest: null,
     bundles: null
-  });
-  var setPriceData = (priceData) => (state) => ({
-    priceData
   });
   var setHistoricalLow = (historicalLow) => (state) => ({
     historicalLow
@@ -578,19 +485,13 @@
   var setUserCountry = (user_country) => (state) => ({
     user_country
   });
-  var setUserCurrency = (user_currency) => (state) => ({
-    user_currency
-  });
-  var cacheData = (payload) => (state) => {
+  var cacheResults = (payload) => (state) => {
     const newCache = Object.assign({}, state.cache);
     if (newCache[payload.region]) {
-      newCache[payload.region][payload.country] = {
-        ...newCache[payload.region][payload.country] || {},
-        ...payload.data
-      };
+      newCache[payload.region][payload.country] = payload.results;
     } else {
       newCache[payload.region] = {
-        [payload.country]: { ...payload.data }
+        [payload.country]: payload.results
       };
     }
     return { cache: newCache };
@@ -598,40 +499,16 @@
   var readAndSetFromStorage = () => (state, actions2) => {
     const user_region = storage.getValue("user_region");
     const user_country = storage.getValue("user_country");
-    const user_currency = storage.getValue("user_currency");
-    if (user_region && user_country && user_currency) {
+    if (user_region && user_country) {
       actions2.setUserRegion(user_region);
       actions2.setUserCountry(user_country);
-      actions2.setUserCurrency(user_currency);
     } else {
       actions2.persistToStorage({ key: "user_region", value: state.user_region });
       actions2.persistToStorage({ key: "user_country", value: state.user_country });
-      actions2.persistToStorage({ key: "user_currency", value: state.user_currency });
     }
   };
   var persistToStorage = (item) => () => {
     storage.setValue(item.key, item.value);
-  };
-  var updatePagePrice = ({ pageCurrency, selectedCurrency, priceData }) => () => {
-    const el = q(".enhanced-gog-price");
-    if (pageCurrency !== selectedCurrency) {
-      let text = "";
-      const currency = currencies_default[selectedCurrency];
-      if (currency) {
-        let price = priceData[selectedCurrency].final.replace(/[^0-9]/g, "").trim();
-        let cents = price.substr(-2);
-        price = price.split("");
-        price.splice(-2, 2);
-        price = price.join("") + "." + cents;
-        const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
-        text = "(" + formatPrice(price) + ")";
-      } else {
-        text = `(${priceData[selectedCurrency].final})`;
-      }
-      el.innerText = text;
-    } else {
-      el.innerText = "";
-    }
   };
   var getAllPriceData = () => (state, actions2) => {
     const setStats = (res) => {
@@ -642,17 +519,7 @@
     };
     actions2.setError(null);
     if (state.cache[state.user_region] && state.cache[state.user_region][state.user_country]) {
-      const cached = state.cache[state.user_region][state.user_country];
-      setStats(cached.results);
-      actions2.setPriceData(cached.priceData);
-      let defaultCurrency = null;
-      if (!(state.user_currency in cached.priceData)) {
-        defaultCurrency = Object.keys(cached.priceData)[0];
-        actions2.setUserCurrency(defaultCurrency);
-        actions2.persistToStorage({ key: "user_currency", value: defaultCurrency });
-      }
-      const selectedCurrency = defaultCurrency || state.user_currency;
-      actions2.updatePagePrice({ pageCurrency: state.pageCurrency, selectedCurrency, priceData: cached.priceData });
+      setStats(state.cache[state.user_region][state.user_country]);
     } else {
       itad.getPlainId(state.game_id).then((plain_id) => {
         return Promise.all([
@@ -663,39 +530,14 @@
         ]);
       }).then((res) => {
         setStats(res);
-        actions2.cacheData({
+        actions2.cacheResults({
           region: state.user_region,
           country: state.user_country,
-          data: { results: res }
+          results: res
         });
-        const userCountry = state.user_country.replace(/[0-9]/g, "");
-        return PriceService_default.getPrices(state.game_id, userCountry);
-      }).then((res) => {
-        const prices = res["_embedded"] && res["_embedded"].prices || [];
-        const priceData = prices.reduce((acc, cur) => {
-          acc[cur.currency.code] = {
-            base: cur.basePrice,
-            final: cur.finalPrice
-          };
-          return acc;
-        }, {});
-        actions2.setPriceData(priceData);
-        actions2.cacheData({
-          region: state.user_region,
-          country: state.user_country,
-          data: { priceData }
-        });
-        let defaultCurrency = null;
-        if (!(state.user_currency in priceData)) {
-          defaultCurrency = Object.keys(priceData)[0];
-          actions2.setUserCurrency(defaultCurrency);
-          actions2.persistToStorage({ key: "user_currency", value: defaultCurrency });
-        }
-        const selectedCurrency = defaultCurrency || state.user_currency;
-        actions2.updatePagePrice({ pageCurrency: state.pageCurrency, selectedCurrency, priceData });
       }).catch((err) => {
         actions2.setError(err);
-        console.log(`== Enhanced GOG - Error has occured == ${err.statusText}`);
+        console.log(`== Enhanced GOG - Error has occured == ${err}`);
       });
     }
   };
@@ -711,10 +553,7 @@
     setUserCountry,
     readAndSetFromStorage,
     persistToStorage,
-    cacheData,
-    setPriceData,
-    setUserCurrency,
-    updatePagePrice
+    cacheResults
   };
 
   // src/components/Divider.js
@@ -731,7 +570,7 @@
   };
 
   // src/components/Point.js
-  var Point = (attrs, children) => h("p", attrs, children);
+  var Point = (attrs, children) => () => h("p", Object.assign({ class: "" }, attrs), children);
 
   // src/components/Spinner.js
   var Spinner = () => () => {
@@ -820,61 +659,30 @@
     const region_map = state.region_map;
     const regions = Object.keys(region_map);
     return h("div", { style: { margin: "1em 0 0 0", fontSize: "13px" } }, [
-      Point({}, h("b", {}, "Region")),
-      h("select", {
-        style: {
-          border: "1px solid #cecece",
-          padding: "0.4em",
-          margin: "0.5em 0 0 0",
-          backgroundColor: "#f6f6f6"
-        },
-        oncreate: (el) => {
-          el.value = `${state.user_region}-${state.user_country}`;
-        },
-        onchange: (ev) => {
-          const [new_region, new_country] = ev.target.value.split("-");
-          actions2.setStatsToNull();
-          actions2.persistToStorage({ key: "user_region", value: new_region });
-          actions2.persistToStorage({ key: "user_country", value: new_country });
-          actions2.setUserRegion(new_region);
-          actions2.setUserCountry(new_country);
-          actions2.getAllPriceData();
-        }
-      }, [
-        regions.map((region) => {
-          return Group(region, Object.keys(region_map[region]).map((country) => {
-            return Option(region + "-" + country, region_map[region][country].name);
-          }));
-        })
+      Point({}, h("b", {}, "Enhanced GOG Region")),
+      Point({}, [
+        h("select", {
+          style: { border: "1px solid #cecece", padding: "0.4em", margin: "0.5em 0 0 0", backgroundColor: "#f6f6f6" },
+          oncreate: (el) => {
+            el.value = `${state.user_region}-${state.user_country}`;
+          },
+          onchange: (ev) => {
+            const [new_region, new_country] = ev.target.value.split("-");
+            actions2.setStatsToNull();
+            actions2.persistToStorage({ key: "user_region", value: new_region });
+            actions2.persistToStorage({ key: "user_country", value: new_country });
+            actions2.setUserRegion(new_region);
+            actions2.setUserCountry(new_country);
+            actions2.getAllPriceData();
+          }
+        }, [
+          regions.map((region) => {
+            return Group(region, Object.keys(region_map[region]).map((country) => {
+              return Option(region + "-" + country, region_map[region][country].name);
+            }));
+          })
+        ])
       ])
-    ]);
-  };
-
-  // src/components/Container/CurrencySelect.js
-  var Option2 = (currency) => () => h("option", { value: currency }, currency);
-  var CurrencySelect = () => (state, actions2) => {
-    return h("div", { style: { margin: "1em 0 0 0", fontSize: "13px" } }, [
-      Point({}, h("b", {}, "Currency")),
-      h("select", {
-        style: {
-          border: "1px solid #cecece",
-          padding: "0.4em",
-          margin: "0.5em 0 0 0",
-          backgroundColor: "#f6f6f6"
-        },
-        oncreate: (el) => {
-          el.value = `${state.user_currency}`;
-        },
-        onupdate: (el) => {
-          el.value = state.user_currency;
-        },
-        onchange: (ev) => {
-          const user_currency = ev.target.value;
-          actions2.persistToStorage({ key: "user_currency", value: user_currency });
-          actions2.setUserCurrency(user_currency);
-          actions2.updatePagePrice({ pageCurrency: state.pageCurrency, selectedCurrency: user_currency, priceData: state.priceData });
-        }
-      }, Object.keys(state.priceData).map((currency) => Option2(currency)))
     ]);
   };
 
@@ -923,9 +731,7 @@
       h("div", { style: { paddingTop: "1.2em" } }, [
         state.currentLowest && state.historicalLow ? Notifications() : null,
         state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles ? Stats() : state.error ? Error() : Spinner(),
-        CountrySelect(),
-        h("div", {}, ""),
-        state.priceData && CurrencySelect()
+        CountrySelect()
       ])
     ]);
   };
@@ -952,9 +758,7 @@
       region_map: region_map_default,
       user_region: "us",
       user_country: "US",
-      user_currency: "USD",
       currentLowest: null,
-      priceData: null,
       historicalLow: null,
       historicalLowGOG: null,
       bundles: null,
@@ -973,15 +777,9 @@
       const pageCurrency = product.currency;
       const container = c("div", "enhanced-gog-container");
       q("div.product-actions").appendChild(container);
-      const priceContainer = c("span", "enhanced-gog-price");
-      style(priceContainer, {
-        fontSize: "0.5em",
-        color: "rgb(136, 128, 128)",
-        margin: "0 0.2rem"
-      });
-      q(".product-actions-price__final-amount").appendChild(priceContainer);
       createApp(game_id, currentPrice, pageCurrency, container);
     }
   };
   runUserScript();
 })();
+//# sourceMappingURL=enhanced-gog.user.js.map

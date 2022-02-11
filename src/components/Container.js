@@ -3,7 +3,6 @@ import { Divider } from './Divider';
 import { Spinner } from './Spinner';
 import { Stats } from './Container/Stats';
 import { CountrySelect } from './Container/CountrySelect';
-import { CurrencySelect } from './Container/CurrencySelect';
 import { Notifications } from './Container/Notifications';
 import { Error } from './Container/Error';
 
@@ -32,12 +31,7 @@ export const Container = () => (state, actions) => {
                     : Spinner()
             ,
 
-            CountrySelect(),
-            h('div', {}, ''),
-
-            state.priceData &&
-                CurrencySelect()
-            ,
+            CountrySelect()
         ])
     ]);
 };
