@@ -5,7 +5,7 @@ const Option = (currency) => () => h('option', { value: currency }, currency);
 
 export const CurrencySelect = () => (state, actions) => {
     return h('div', { style: { margin: '1em 0 0 0', fontSize: '13px' } }, [
-        Point({}, h('b', {}, 'Currency')),
+        Point({}, h('b', {}, 'GOG Currency')),
         h('select', {
             style: {
                 border: '1px solid #cecece',
@@ -14,19 +14,13 @@ export const CurrencySelect = () => (state, actions) => {
                 backgroundColor: '#f6f6f6'
             },
 
-            oncreate: el => {
-                el.value = `${state.gogCurrency}`;
-            },
-
-            onupdate: (el) => {
-                el.value = state.gogCurrency;
-            },
+            value: `${state.gogCurrency}`,
 
             onchange: ev => {
                 const gogCurrency = ev.target.value;
 
                 // Persist Changes to Storage
-                actions.persistToStorage({ key: 'gogCurrency', value: gogCurrency });
+                actions.persistToStorage({ key: 'gog_currency', value: gogCurrency });
 
                 // Update State
                 actions.setGOGCurrency(gogCurrency);
