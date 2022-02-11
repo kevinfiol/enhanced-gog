@@ -18,5 +18,8 @@
   },
   "dependencies": {
     "hyperapp": "^1.2.9"
+  },
+  "volta": {
+    "node": "14.18.3"
   }
 }
