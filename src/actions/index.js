@@ -1,6 +1,9 @@
 import { config } from '../config';
+import { q, createPriceFormatter } from '../util';
 import IsThereAnyDeal from '../services/IsThereAnyDeal';
 import Storage from '../services/Storage';
+import PriceService from '../services/PriceService';
+import currencies from '../data/currencies.json';
 
 /**
  * Dependencies
@@ -46,6 +49,14 @@ const setUserCountry = user_country => state => ({
     user_country
 });
 
+const setPriceData = priceData => state => ({
+    priceData
+});
+
+const setGOGCurrency = gogCurrency => state => ({
+    gogCurrency
+});
+
 const cacheResults = payload => state => {
     const newCache = Object.assign({}, state.cache);
 
@@ -63,18 +74,45 @@ const cacheResults = payload => state => {
 const readAndSetFromStorage = () => (state, actions) => {
     const user_region = storage.getValue('user_region');
     const user_country = storage.getValue('user_country');
+    const gogCurrency = storage.getValue('gog_currency');
 
-    if (user_region && user_country) {
+    if (user_region && user_country && gogCurrency) {
         actions.setUserRegion(user_region);
         actions.setUserCountry(user_country);
+        actions.setGOGCurrency(gogCurrency)
     } else {
         actions.persistToStorage({ key: 'user_region', value: state.user_region });
         actions.persistToStorage({ key: 'user_country', value: state.user_country });
+        actions.persistToStorage({ key: 'gog_currency', value: state.pageCurrency });
     }
 };
 
 const persistToStorage = item => () => {
     storage.setValue(item.key, item.value);
+};
+
+const updatePagePrice = ({ pageCurrency, gogCurrency, priceData }) => () => {
+    const el = q('.enhanced-gog-price');
+    if (pageCurrency !== gogCurrency) {
+        let text = '';
+        const currency = currencies[gogCurrency];
+        if (currency) {
+            let price = priceData[gogCurrency].final.replace(/[^0-9]/g, '').trim();
+            let cents = price.substr(-2);
+            price = price.split('');
+            price.splice(-2, 2); // remove cents
+            price = price.join('') + '.' + cents;
+
+            const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
+            text = '(' + formatPrice(price) + ')';
+        } else {
+            text = `(${priceData[gogCurrency].final})`;
+        }
+
+        el.innerText = text;
+    } else {
+        el.innerText = '';
+    }
 };
 
 const getAllPriceData = () => (state, actions) => {
@@ -114,6 +152,23 @@ const getAllPriceData = () => (state, actions) => {
                     country: state.user_country,
                     results: res
                 });
+
+                // get price data for user's country
+                return PriceService.getPrices(state.game_id, state.gogCountry);
+            })
+            .then(res => {
+                const prices = res['_embedded'] && res['_embedded'].prices || [];
+                const priceData = prices.reduce((acc, cur) => {
+                    acc[cur.currency.code] = {
+                        base: cur.basePrice,
+                        final: cur.finalPrice
+                    };
+
+                    return acc;
+                }, {});
+
+                actions.setPriceData(priceData);
+                actions.updatePagePrice({ pageCurrency: state.pageCurrency, gogCurrency: state.gogCurrency, priceData });
             })
             .catch(err => {
                 actions.setError(err);
@@ -135,5 +190,8 @@ export const actions = {
     setUserCountry,
     readAndSetFromStorage,
     persistToStorage,
-    cacheResults
+    cacheResults,
+    setPriceData,
+    setGOGCurrency,
+    updatePagePrice
 };

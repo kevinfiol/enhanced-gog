@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.3.1
+// @version 1.4.1
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -139,11 +139,11 @@
           if (typeof oldValue === "string")
             oldValue = element.style.cssText = "";
           for (var i in clone(oldValue, value)) {
-            var style = value == null || value[i] == null ? "" : value[i];
+            var style2 = value == null || value[i] == null ? "" : value[i];
             if (i[0] === "-") {
-              element.style.setProperty(i, style);
+              element.style.setProperty(i, style2);
             } else {
-              element.style[i] = style;
+              element.style[i] = style2;
             }
           }
         }
@@ -307,7 +307,7 @@
 
   // src/config.js
   var config = {
-    VERSION: "1.3.0",
+    VERSION: "1.4.1",
     BASE_URL: "https://api.isthereanydeal.com",
     API_KEY: "d047b30e0fc7d9118f3953de04fa6af9eba22379"
   };
@@ -319,6 +319,11 @@
     el.className = className;
     el.innerHTML = innerHTML;
     return el;
+  };
+  var style = (el, styles) => {
+    Object.entries(styles).map(([prop, value]) => {
+      el.style[prop] = value;
+    });
   };
   var createPriceFormatter = (sign, delimiter, left) => {
     return (price) => {
@@ -334,7 +339,7 @@
     const year = date.getFullYear();
     return `${month}/${day}/${year}`;
   };
-  var request = (method, url, params) => {
+  var request = (method, url, params = {}) => {
     const queryArr = Object.keys(params).map((key) => {
       return `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
     });
@@ -349,7 +354,7 @@
             if (res.status >= 200 && res.status < 300) {
               resolve(res.responseText);
             } else {
-              reject(res.statusText);
+              reject(res);
             }
           },
           onerror: (err) => reject(err.statusText)
@@ -455,6 +460,91 @@
   };
   var Storage_default = Storage;
 
+  // src/services/PriceService.js
+  var PriceService = {
+    getPrices(product_id, country_code) {
+      const endpoint = `https://api.gog.com/products/${product_id}/prices`;
+      return request("GET", endpoint, { countryCode: country_code }).then(JSON.parse);
+    }
+  };
+  var PriceService_default = PriceService;
+
+  // src/data/currencies.json
+  var EUR = {
+    code: "EUR",
+    sign: "\u20AC",
+    delimiter: ",",
+    left: false,
+    html: "&euro;"
+  };
+  var GBP = {
+    code: "GBP",
+    sign: "\xA3",
+    delimiter: ".",
+    left: true,
+    html: "&pound;"
+  };
+  var USD = {
+    code: "USD",
+    sign: "$",
+    delimiter: ".",
+    left: true,
+    html: "$"
+  };
+  var CAD = {
+    code: "CAD",
+    sign: "$",
+    delimiter: ".",
+    left: true,
+    html: "$"
+  };
+  var BRL = {
+    code: "BRL",
+    sign: "R$",
+    delimiter: ".",
+    left: true,
+    html: "R$"
+  };
+  var AUD = {
+    code: "AUD",
+    sign: "$",
+    delimiter: ".",
+    left: true,
+    html: "$"
+  };
+  var RUB = {
+    code: "RUB",
+    sign: "\u0440\u0443\u0431",
+    delimiter: ",",
+    left: false,
+    html: " p."
+  };
+  var TRY = {
+    code: "TRY",
+    sign: "TL",
+    delimiter: ",",
+    left: false,
+    html: " TL"
+  };
+  var CNY = {
+    code: "CNY",
+    sign: "\xA5",
+    delimiter: ".",
+    left: true,
+    html: "&yen;"
+  };
+  var currencies_default = {
+    EUR,
+    GBP,
+    USD,
+    CAD,
+    BRL,
+    AUD,
+    RUB,
+    TRY,
+    CNY
+  };
+
   // src/actions/index.js
   var itad = IsThereAnyDeal_default(config.BASE_URL, config.API_KEY);
   var storage = Storage_default();
@@ -485,6 +575,12 @@
   var setUserCountry = (user_country) => (state) => ({
     user_country
   });
+  var setPriceData = (priceData) => (state) => ({
+    priceData
+  });
+  var setGOGCurrency = (gogCurrency) => (state) => ({
+    gogCurrency
+  });
   var cacheResults = (payload) => (state) => {
     const newCache = Object.assign({}, state.cache);
     if (newCache[payload.region]) {
@@ -499,16 +595,40 @@
   var readAndSetFromStorage = () => (state, actions2) => {
     const user_region = storage.getValue("user_region");
     const user_country = storage.getValue("user_country");
-    if (user_region && user_country) {
+    const gogCurrency = storage.getValue("gog_currency");
+    if (user_region && user_country && gogCurrency) {
       actions2.setUserRegion(user_region);
       actions2.setUserCountry(user_country);
+      actions2.setGOGCurrency(gogCurrency);
     } else {
       actions2.persistToStorage({ key: "user_region", value: state.user_region });
       actions2.persistToStorage({ key: "user_country", value: state.user_country });
+      actions2.persistToStorage({ key: "gog_currency", value: state.pageCurrency });
     }
   };
   var persistToStorage = (item) => () => {
     storage.setValue(item.key, item.value);
+  };
+  var updatePagePrice = ({ pageCurrency, gogCurrency, priceData }) => () => {
+    const el = q(".enhanced-gog-price");
+    if (pageCurrency !== gogCurrency) {
+      let text = "";
+      const currency = currencies_default[gogCurrency];
+      if (currency) {
+        let price = priceData[gogCurrency].final.replace(/[^0-9]/g, "").trim();
+        let cents = price.substr(-2);
+        price = price.split("");
+        price.splice(-2, 2);
+        price = price.join("") + "." + cents;
+        const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
+        text = "(" + formatPrice(price) + ")";
+      } else {
+        text = `(${priceData[gogCurrency].final})`;
+      }
+      el.innerText = text;
+    } else {
+      el.innerText = "";
+    }
   };
   var getAllPriceData = () => (state, actions2) => {
     const setStats = (res) => {
@@ -535,6 +655,18 @@
           country: state.user_country,
           results: res
         });
+        return PriceService_default.getPrices(state.game_id, state.gogCountry);
+      }).then((res) => {
+        const prices = res["_embedded"] && res["_embedded"].prices || [];
+        const priceData = prices.reduce((acc, cur) => {
+          acc[cur.currency.code] = {
+            base: cur.basePrice,
+            final: cur.finalPrice
+          };
+          return acc;
+        }, {});
+        actions2.setPriceData(priceData);
+        actions2.updatePagePrice({ pageCurrency: state.pageCurrency, gogCurrency: state.gogCurrency, priceData });
       }).catch((err) => {
         actions2.setError(err);
         console.log(`== Enhanced GOG - Error has occured == ${err}`);
@@ -553,7 +685,10 @@
     setUserCountry,
     readAndSetFromStorage,
     persistToStorage,
-    cacheResults
+    cacheResults,
+    setPriceData,
+    setGOGCurrency,
+    updatePagePrice
   };
 
   // src/components/Divider.js
@@ -731,7 +866,8 @@
       h("div", { style: { paddingTop: "1.2em" } }, [
         state.currentLowest && state.historicalLow ? Notifications() : null,
         state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles ? Stats() : state.error ? Error() : Spinner(),
-        CountrySelect()
+        CountrySelect(),
+        h("div", {}, "")
       ])
     ]);
   };
@@ -750,7 +886,7 @@
   var region_map_default = { eu1, eu2, uk, us, ca, br2, au2, ru, tr, cn };
 
   // src/index.js
-  var createApp = (game_id, currentPrice, pageCurrency, container) => {
+  var createApp = (game_id, currentPrice, pageCurrency, pageCountry, container) => {
     const state = {
       game_id,
       currentPrice,
@@ -758,6 +894,9 @@
       region_map: region_map_default,
       user_region: "us",
       user_country: "US",
+      gogCountry: pageCountry,
+      gogCurrency: pageCurrency,
+      priceData: null,
       currentLowest: null,
       historicalLow: null,
       historicalLowGOG: null,
@@ -775,9 +914,17 @@
       const game_id = product.cardProductId;
       const currentPrice = product.cardProduct.price.finalAmount;
       const pageCurrency = product.currency;
+      const pageCountry = product.country;
       const container = c("div", "enhanced-gog-container");
       q("div.product-actions").appendChild(container);
-      createApp(game_id, currentPrice, pageCurrency, container);
+      const priceContainer = c("span", "enhanced-gog-price");
+      style(priceContainer, {
+        fontSize: "0.5em",
+        color: "rgb(136, 128, 128)",
+        margin: "0 0.2rem"
+      });
+      q(".product-actions-price__final-amount").appendChild(priceContainer);
+      createApp(game_id, currentPrice, pageCurrency, pageCountry, container);
     }
   };
   runUserScript();

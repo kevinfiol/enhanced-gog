@@ -1,11 +1,11 @@
 import { h, app } from 'hyperapp';
 import { config } from './config';
-import { q, c } from './util';
+import { q, c, style } from './util';
 import { actions } from './actions/index';
 import { Container } from './components/Container';
 import region_map from './data/region_map.json';
 
-const createApp = (game_id, currentPrice, pageCurrency, container) => {
+const createApp = (game_id, currentPrice, pageCurrency, pageCountry, container) => {
     // Hyperapp State & Actions
     const state = {
         game_id,
@@ -14,6 +14,9 @@ const createApp = (game_id, currentPrice, pageCurrency, container) => {
         region_map,
         user_region: 'us',
         user_country: 'US',
+        gogCountry: pageCountry,
+        gogCurrency: pageCurrency,
+        priceData: null,
         currentLowest: null,
         historicalLow: null,
         historicalLowGOG: null,
@@ -39,11 +42,21 @@ const runUserScript = () => {
         const game_id = product.cardProductId;
         const currentPrice = product.cardProduct.price.finalAmount;
         const pageCurrency = product.currency;
+        const pageCountry = product.country;
 
         const container = c('div', 'enhanced-gog-container');
         q('div.product-actions').appendChild(container);
-        
-        createApp(game_id, currentPrice, pageCurrency, container);
+
+        const priceContainer = c('span', 'enhanced-gog-price');
+        style(priceContainer, {
+            fontSize: '0.5em',
+            color: 'rgb(136, 128, 128)',
+            margin: '0 0.2rem'
+        });
+
+        q('.product-actions-price__final-amount').appendChild(priceContainer);
+
+        createApp(game_id, currentPrice, pageCurrency, pageCountry, container);
     }
 };
 

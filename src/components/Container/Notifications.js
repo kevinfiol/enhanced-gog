@@ -1,5 +1,4 @@
 import { h } from 'hyperapp';
-import { q, c } from '../../util';
 import { Point } from '../Point';
 
 export const Notifications = () => (state, actions) => {
