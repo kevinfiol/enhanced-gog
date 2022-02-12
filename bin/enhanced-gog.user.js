@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog-beta
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.2
+// @version 1.4.3
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -942,7 +942,7 @@
       region_map: region_map_default,
       user_region: "us",
       user_country: "US",
-      gogCountry: "DE",
+      gogCountry: pageCountry,
       gogCurrency: pageCurrency,
       priceData: null,
       currentLowest: null,

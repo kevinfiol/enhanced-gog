@@ -14,7 +14,7 @@ const createApp = (game_id, currentPrice, pageCurrency, pageCountry, container) 
         region_map,
         user_region: 'us',
         user_country: 'US',
-        gogCountry: 'DE',
+        gogCountry: pageCountry,
         gogCurrency: pageCurrency,
         priceData: null,
         currentLowest: null,
