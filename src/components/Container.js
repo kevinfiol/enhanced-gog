@@ -32,11 +32,15 @@ export const Container = () => (state, actions) => {
                     : Spinner()
             ,
 
-            CountrySelect(),
-            h('div', {}, ''),
-            state.priceData &&
-                CurrencySelect()
-            ,
+            h('div', {
+                style: { display: 'flex' }
+            }, [
+                CountrySelect(),
+                h('div', {}, ''),
+                state.priceData &&
+                    CurrencySelect()
+                ,
+            ])
         ])
     ]);
 };

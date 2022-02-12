@@ -8,11 +8,17 @@ export const CountrySelect = () => (state, actions) => {
     const region_map = state.region_map;
     const regions = Object.keys(region_map); // ['eu1', 'eu2', 'us', 'ca', ...]
 
-    return h('div', { style: { margin: '1em 0 0 0', fontSize: '13px' } }, [
+    return h('div', { style: { width: '100%', fontSize: '13px' } }, [
         Point({}, h('b', {}, 'ITAD Region')),
         Point({}, [
             h('select', {
-                style: { border: '1px solid #cecece', padding: '0.4em', margin: '0.5em 0 0 0', backgroundColor: '#f6f6f6' },
+                style: {
+                    width: '100%',
+                    border: '1px solid #cecece',
+                    padding: '0.4em',
+                    margin: '0.5em 0 0 0',
+                    backgroundColor: '#f6f6f6'
+                },
 
                 value: `${state.user_region}-${state.user_country}`,
 

@@ -14,7 +14,7 @@ const createApp = (game_id, currentPrice, pageCurrency, pageCountry, container) 
         region_map,
         user_region: 'us',
         user_country: 'US',
-        gogCountry: pageCountry,
+        gogCountry: 'DE',
         gogCurrency: pageCurrency,
         priceData: null,
         currentLowest: null,
@@ -48,13 +48,21 @@ const runUserScript = () => {
         q('div.product-actions').appendChild(container);
 
         const priceContainer = c('span', 'enhanced-gog-price');
+        const basePriceContainer = c('span', 'enhanced-gog-base-price');
+
         style(priceContainer, {
             fontSize: '0.5em',
             color: 'rgb(136, 128, 128)',
             margin: '0 0.2rem'
         });
 
+        style(basePriceContainer, {
+            fontSize: '0.85em',
+            margin: '0 0.2rem'
+        });
+
         q('.product-actions-price__final-amount').appendChild(priceContainer);
+        q('.product-actions-price__base-amount').appendChild(basePriceContainer);
 
         createApp(game_id, currentPrice, pageCurrency, pageCountry, container);
     }

@@ -4,10 +4,11 @@ import { Point } from '../Point';
 const Option = (currency) => () => h('option', { value: currency }, currency);
 
 export const CurrencySelect = () => (state, actions) => {
-    return h('div', { style: { margin: '1em 0 0 0', fontSize: '13px' } }, [
+    return h('div', { style: { width: '100%', fontSize: '13px' } }, [
         Point({}, h('b', {}, 'GOG Currency')),
         h('select', {
             style: {
+                width: '100%',
                 border: '1px solid #cecece',
                 padding: '0.4em',
                 margin: '0.5em 0 0 0',

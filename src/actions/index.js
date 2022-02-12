@@ -92,28 +92,41 @@ const persistToStorage = item => () => {
 };
 
 const updatePagePrice = ({ pageCurrency, gogCurrency, priceData }) => () => {
-    const el = q('.enhanced-gog-price');
-    if (pageCurrency !== gogCurrency) {
-        let text = '';
-        const currency = currencies[gogCurrency];
-        if (currency) {
-            let price = priceData[gogCurrency].final.replace(/[^0-9]/g, '').trim();
-            let cents = price.substr(-2);
-            price = price.split('');
-            price.splice(-2, 2); // remove cents
-            price = price.join('') + '.' + cents;
+    const finalPriceEl = q('.enhanced-gog-price');
+    const basePriceEl = q('.enhanced-gog-base-price');
 
+    if (pageCurrency !== gogCurrency) {
+        const currency = currencies[gogCurrency];
+        const currencyData = priceData[gogCurrency];
+
+        if (currency) {
             const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
-            text = '(' + formatPrice(price) + ')';
+
+            finalPriceEl.innerText = formatPagePrice(currencyData.final, formatPrice);
+            basePriceEl.innerText = formatPagePrice(currencyData.base, formatPrice);
         } else {
-            text = `(${priceData[gogCurrency].final})`;
+            finalPriceEl.innerText = `(${currencyData.final})`;
+            basePriceEl.innerText = `(${currencyData.base})`;
         }
 
-        el.innerText = text;
+        finalPriceEl.style.display = 'inline';
+        basePriceEl.style.display = 'inline';
     } else {
-        el.innerText = '';
+        finalPriceEl.innerText = '';
+        basePriceEl.innerText = '';
+        finalPriceEl.style.display = 'none';
+        basePriceEl.style.display = 'none';
     }
 };
+
+function formatPagePrice(unformattedPrice, formatPrice) {
+    let text = unformattedPrice.replace(/[^0-9]/g, '').trim();
+    let cents = text.substr(-2);
+    text = text.split('');
+    text.splice(-2, 2); // remove cents
+    text = text.join('') + '.' + cents;
+    return '(' + formatPrice(text) + ')';
+}
 
 const getAllPriceData = () => (state, actions) => {
     // Set all ITAD Stats

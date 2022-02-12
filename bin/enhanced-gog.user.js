@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name enhanced-gog
+// @name enhanced-gog-beta
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.1
+// @version 1.4.2
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -610,26 +610,36 @@
     storage.setValue(item.key, item.value);
   };
   var updatePagePrice = ({ pageCurrency, gogCurrency, priceData }) => () => {
-    const el = q(".enhanced-gog-price");
+    const finalPriceEl = q(".enhanced-gog-price");
+    const basePriceEl = q(".enhanced-gog-base-price");
     if (pageCurrency !== gogCurrency) {
-      let text = "";
       const currency = currencies_default[gogCurrency];
+      const currencyData = priceData[gogCurrency];
       if (currency) {
-        let price = priceData[gogCurrency].final.replace(/[^0-9]/g, "").trim();
-        let cents = price.substr(-2);
-        price = price.split("");
-        price.splice(-2, 2);
-        price = price.join("") + "." + cents;
         const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
-        text = "(" + formatPrice(price) + ")";
+        finalPriceEl.innerText = formatPagePrice(currencyData.final, formatPrice);
+        basePriceEl.innerText = formatPagePrice(currencyData.base, formatPrice);
       } else {
-        text = `(${priceData[gogCurrency].final})`;
+        finalPriceEl.innerText = `(${currencyData.final})`;
+        basePriceEl.innerText = `(${currencyData.base})`;
       }
-      el.innerText = text;
+      finalPriceEl.style.display = "inline";
+      basePriceEl.style.display = "inline";
     } else {
-      el.innerText = "";
+      finalPriceEl.innerText = "";
+      basePriceEl.innerText = "";
+      finalPriceEl.style.display = "none";
+      basePriceEl.style.display = "none";
     }
   };
+  function formatPagePrice(unformattedPrice, formatPrice) {
+    let text = unformattedPrice.replace(/[^0-9]/g, "").trim();
+    let cents = text.substr(-2);
+    text = text.split("");
+    text.splice(-2, 2);
+    text = text.join("") + "." + cents;
+    return "(" + formatPrice(text) + ")";
+  }
   var getAllPriceData = () => (state, actions2) => {
     const setStats = (res) => {
       actions2.setHistoricalLow(res[0]);
@@ -719,7 +729,12 @@
   };
 
   // src/components/Link.js
-  var Link = (href, text) => () => h("a", { style: { textDecoration: "underline" }, href }, text);
+  var Link = (href, text) => () => {
+    if (href.includes("gog.com")) {
+      href = "https://www.gog.com" + decodeURIComponent(href.split("gog.com")[1]);
+    }
+    return h("a", { style: { textDecoration: "underline" }, href }, text);
+  };
 
   // src/components/Container/Stats/CurrentLowest.js
   var CurrentLowest = () => (state) => {
@@ -793,14 +808,18 @@
   var CountrySelect = () => (state, actions2) => {
     const region_map = state.region_map;
     const regions = Object.keys(region_map);
-    return h("div", { style: { margin: "1em 0 0 0", fontSize: "13px" } }, [
-      Point({}, h("b", {}, "Enhanced GOG Region")),
+    return h("div", { style: { width: "100%", fontSize: "13px" } }, [
+      Point({}, h("b", {}, "ITAD Region")),
       Point({}, [
         h("select", {
-          style: { border: "1px solid #cecece", padding: "0.4em", margin: "0.5em 0 0 0", backgroundColor: "#f6f6f6" },
-          oncreate: (el) => {
-            el.value = `${state.user_region}-${state.user_country}`;
+          style: {
+            width: "100%",
+            border: "1px solid #cecece",
+            padding: "0.4em",
+            margin: "0.5em 0 0 0",
+            backgroundColor: "#f6f6f6"
           },
+          value: `${state.user_region}-${state.user_country}`,
           onchange: (ev) => {
             const [new_region, new_country] = ev.target.value.split("-");
             actions2.setStatsToNull();
@@ -818,6 +837,30 @@
           })
         ])
       ])
+    ]);
+  };
+
+  // src/components/Container/CurrencySelect.js
+  var Option2 = (currency) => () => h("option", { value: currency }, currency);
+  var CurrencySelect = () => (state, actions2) => {
+    return h("div", { style: { width: "100%", fontSize: "13px" } }, [
+      Point({}, h("b", {}, "GOG Currency")),
+      h("select", {
+        style: {
+          width: "100%",
+          border: "1px solid #cecece",
+          padding: "0.4em",
+          margin: "0.5em 0 0 0",
+          backgroundColor: "#f6f6f6"
+        },
+        value: `${state.gogCurrency}`,
+        onchange: (ev) => {
+          const gogCurrency = ev.target.value;
+          actions2.persistToStorage({ key: "gog_currency", value: gogCurrency });
+          actions2.setGOGCurrency(gogCurrency);
+          actions2.updatePagePrice({ pageCurrency: state.pageCurrency, gogCurrency, priceData: state.priceData });
+        }
+      }, Object.keys(state.priceData).map((currency) => Option2(currency)))
     ]);
   };
 
@@ -866,8 +909,13 @@
       h("div", { style: { paddingTop: "1.2em" } }, [
         state.currentLowest && state.historicalLow ? Notifications() : null,
         state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles ? Stats() : state.error ? Error() : Spinner(),
-        CountrySelect(),
-        h("div", {}, "")
+        h("div", {
+          style: { display: "flex" }
+        }, [
+          CountrySelect(),
+          h("div", {}, ""),
+          state.priceData && CurrencySelect()
+        ])
       ])
     ]);
   };
@@ -894,7 +942,7 @@
       region_map: region_map_default,
       user_region: "us",
       user_country: "US",
-      gogCountry: pageCountry,
+      gogCountry: "DE",
       gogCurrency: pageCurrency,
       priceData: null,
       currentLowest: null,
@@ -918,12 +966,18 @@
       const container = c("div", "enhanced-gog-container");
       q("div.product-actions").appendChild(container);
       const priceContainer = c("span", "enhanced-gog-price");
+      const basePriceContainer = c("span", "enhanced-gog-base-price");
       style(priceContainer, {
         fontSize: "0.5em",
         color: "rgb(136, 128, 128)",
         margin: "0 0.2rem"
       });
+      style(basePriceContainer, {
+        fontSize: "0.85em",
+        margin: "0 0.2rem"
+      });
       q(".product-actions-price__final-amount").appendChild(priceContainer);
+      q(".product-actions-price__base-amount").appendChild(basePriceContainer);
       createApp(game_id, currentPrice, pageCurrency, pageCountry, container);
     }
   };
