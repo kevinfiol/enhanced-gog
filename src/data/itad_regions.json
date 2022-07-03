@@ -1,1 +1,163 @@
-{"data":{"eu1":{"countries":["AL","AD","AT","BE","DK","FI","FR","DE","IE","LI","LU","MK","NL","SE","CH"],"currency":{"code":"EUR","sign":"\u20ac","delimiter":",","left":false,"html":"&euro;"}},"eu2":{"countries":["BA","BG","HR","CY","CZ","GR","HU","IT","MT","MC","ME","NO","PL","PT","RO","SM","RS","SK","SI","ES","VA","EE","LV","LT"],"currency":{"code":"EUR","sign":"\u20ac","delimiter":",","left":false,"html":"&euro;"}},"uk":{"countries":["GB"],"currency":{"code":"GBP","sign":"\u00a3","delimiter":".","left":true,"html":"&pound;"}},"us":{"countries":["US"],"currency":{"code":"USD","sign":"$","delimiter":".","left":true,"html":"$"}},"ca":{"countries":["CA"],"currency":{"code":"CAD","sign":"$","delimiter":".","left":true,"html":"$"}},"br2":{"countries":["BR2"],"currency":{"code":"BRL","sign":"R$","delimiter":".","left":true,"html":"R$"}},"au2":{"countries":["AU2"],"currency":{"code":"AUD","sign":"$","delimiter":".","left":true,"html":"$"}},"ru":{"countries":["RU"],"currency":{"code":"RUB","sign":"\u0440\u0443\u0431","delimiter":",","left":false,"html":" p."}},"tr":{"countries":["TR"],"currency":{"code":"TRY","sign":"TL","delimiter":",","left":false,"html":" TL"}},"cn":{"countries":["CN"],"currency":{"code":"CNY","sign":"\u00a5","delimiter":".","left":true,"html":"&yen;"}}}}
+{
+  "data": {
+    "eu1": {
+      "countries": [
+        "AL",
+        "AD",
+        "AT",
+        "BE",
+        "DK",
+        "FI",
+        "FR",
+        "DE",
+        "IE",
+        "LI",
+        "LU",
+        "MK",
+        "NL",
+        "SE",
+        "CH"
+      ],
+      "currency": {
+        "code": "EUR",
+        "sign": "€",
+        "delimiter": ",",
+        "left": false,
+        "html": "&euro;"
+      }
+    },
+    "eu2": {
+      "countries": [
+        "BA",
+        "BG",
+        "HR",
+        "CY",
+        "CZ",
+        "GR",
+        "HU",
+        "IT",
+        "MT",
+        "MC",
+        "ME",
+        "NO",
+        "PL",
+        "PT",
+        "RO",
+        "SM",
+        "RS",
+        "SK",
+        "SI",
+        "ES",
+        "VA",
+        "EE",
+        "LV",
+        "LT"
+      ],
+      "currency": {
+        "code": "EUR",
+        "sign": "€",
+        "delimiter": ",",
+        "left": false,
+        "html": "&euro;"
+      }
+    },
+    "uk": {
+      "countries": [
+        "GB"
+      ],
+      "currency": {
+        "code": "GBP",
+        "sign": "£",
+        "delimiter": ".",
+        "left": true,
+        "html": "&pound;"
+      }
+    },
+    "us": {
+      "countries": [
+        "US"
+      ],
+      "currency": {
+        "code": "USD",
+        "sign": "$",
+        "delimiter": ".",
+        "left": true,
+        "html": "$"
+      }
+    },
+    "ca": {
+      "countries": [
+        "CA"
+      ],
+      "currency": {
+        "code": "CAD",
+        "sign": "$",
+        "delimiter": ".",
+        "left": true,
+        "html": "$"
+      }
+    },
+    "br2": {
+      "countries": [
+        "BR2",
+        "BR"
+      ],
+      "currency": {
+        "code": "BRL",
+        "sign": "R$",
+        "delimiter": ".",
+        "left": true,
+        "html": "R$"
+      }
+    },
+    "au2": {
+      "countries": [
+        "AU",
+        "AU2"
+      ],
+      "currency": {
+        "code": "AUD",
+        "sign": "$",
+        "delimiter": ".",
+        "left": true,
+        "html": "$"
+      }
+    },
+    "ru": {
+      "countries": [
+        "RU"
+      ],
+      "currency": {
+        "code": "RUB",
+        "sign": "руб",
+        "delimiter": ",",
+        "left": false,
+        "html": " p."
+      }
+    },
+    "tr": {
+      "countries": [
+        "TR"
+      ],
+      "currency": {
+        "code": "TRY",
+        "sign": "TL",
+        "delimiter": ",",
+        "left": false,
+        "html": " TL"
+      }
+    },
+    "cn": {
+      "countries": [
+        "CN"
+      ],
+      "currency": {
+        "code": "CNY",
+        "sign": "¥",
+        "delimiter": ".",
+        "left": true,
+        "html": "&yen;"
+      }
+    }
+  }
+}

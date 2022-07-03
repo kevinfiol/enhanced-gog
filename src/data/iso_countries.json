@@ -38,8 +38,11 @@
     "AW":{
        "name":"Aruba"
     },
+    "AU":{
+       "name":"Australia 1"
+    },
     "AU2":{
-       "name":"Australia"
+       "name":"Australia 2"
     },
     "AT":{
        "name":"Austria"
@@ -89,8 +92,11 @@
     "BV":{
        "name":"Bouvet Island"
     },
+    "BR":{
+       "name":"Brazil 1"
+    },
     "BR2":{
-       "name":"Brazil"
+       "name":"Brazil 2"
     },
     "IO":{
        "name":"British Indian Ocean Territory"

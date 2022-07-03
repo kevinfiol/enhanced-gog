@@ -40,7 +40,9 @@ const IsThereAnyDeal = (base_url, api_key) => {
             .then(JSON.parse)
             .then(parseResponse)
             .then(res => {
-                if (!res.price) return null;
+                if (res.price == undefined || res.price == null) {
+                    return null;
+                }
 
                 return {
                     date: getDateStr(res.added),

@@ -12,11 +12,14 @@ export const CountrySelect = () => (state, actions) => {
         Point({}, h('b', {}, 'Enhanced GOG Region')),
         Point({}, [
             h('select', {
-                style: { border: '1px solid #cecece', padding: '0.4em', margin: '0.5em 0 0 0', backgroundColor: '#f6f6f6' },
-
-                oncreate: el => {
-                    el.value = `${state.user_region}-${state.user_country}`;
+                style: {
+                    border: '1px solid #cecece',
+                    padding: '0.4em',
+                    margin: '0.5em 0 0 0',
+                    backgroundColor: '#f6f6f6'
                 },
+
+                value: `${state.user_region}-${state.user_country}`,
     
                 onchange: ev => {
                     const [new_region, new_country] = ev.target.value.split('-');
