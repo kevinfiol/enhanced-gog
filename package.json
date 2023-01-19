@@ -10,13 +10,15 @@
     "node": "16.x"
   },
   "scripts": {
-    "dev": "node ./scripts/dev.js",
+    "dev": "node ./scripts/build.js -d",
     "build": "node ./scripts/build.js"
   },
   "dependencies": {
-    "hyperapp": "^1.2.9"
+    "hyperapp": "^1.2.9",
+    "umai": "^0.1.2"
   },
   "devDependencies": {
-    "esbuild": "^0.14.48"
+    "esbuild": "^0.14.48",
+    "servbot": "^0.2.6"
   }
 }

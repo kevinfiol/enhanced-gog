@@ -1,50 +1,45 @@
-import { h, app } from 'hyperapp';
-import { config } from './config';
-import { q, c } from './util';
-import { actions } from './actions/index';
-import { Container } from './components/Container';
-import region_map from './data/region_map.json';
+import { m, mount } from 'umai';
+import { VERSION } from './config';
+import { State, Actions } from './state';
+import { Divider } from './components';
 
-const createApp = (game_id, currentPrice, pageCurrency, container) => {
-    // Hyperapp State & Actions
-    const state = {
-        game_id,
-        currentPrice,
-        pageCurrency,
-        region_map,
-        user_region: 'us',
-        user_country: 'US',
-        currentLowest: null,
-        historicalLow: null,
-        historicalLowGOG: null,
-        bundles: null,
-        cache: {},
-        error: null
-    };
+console.log(`== Enhanced GOG ${ VERSION } ==`);
 
-    const view = (state, actions) => Container();
+const App = ({ state, actions }) => (
+  m('div',
+    Divider(),
+    m('div', { style: 'padding-top: 1.2em;' },
+      state.currentLowest && state.historicalLow &&
+        m('p', 'notifications')
+      ,
 
-    // Mount Hyperapp on Container
-    app(state, actions, view, container);
-};
+      state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
+        ? m('p', 'stats')
+        : state.error ? m('p', 'error') : m('p', 'spinner')
+      ,
 
-/**
- * Retrieves Data & calls renderStats on a timeOut
- */
-const runUserScript = () => {
-    console.log(`== Enhanced GOG ${ config.VERSION } ==`);
-    const product = unsafeWindow.productcardData;
+      m('p', 'country select')
+    )
+  )
+);
 
-    if (product !== undefined) {
-        const game_id = product.cardProductId;
-        const currentPrice = product.cardProduct.price.finalAmount;
-        const pageCurrency = product.currency;
+// get vars from window
+const product = unsafeWindow.productcardData;
 
-        const container = c('div', 'enhanced-gog-container');
-        q('div.product-actions').appendChild(container);
-        
-        createApp(game_id, currentPrice, pageCurrency, container);
-    }
-};
+if (product && typeof product === 'object') {
+  // create state
+  const state = State({
+    gameId: product.cardProductId,
+    currentPrice: product.cardProduct.price.finalAmount,
+    pageCurrency: product.currency
+  });
 
-runUserScript();
+  const actions = Actions(state);
+
+  // create container div
+  const container = document.createElement('div');
+  container.className = 'enhanced-gog-container';
+
+  document.querySelector('div.product-actions').appendChild(container);
+  mount(container, () => App({ state, actions }));
+}
