@@ -9,11 +9,13 @@ export const State = (init = {}) => ({
   historicalLow: undefined,
   historicalLowGOG: undefined,
   bundles: undefined,
-  cache: {},
   error: undefined,
   ...init
 });
 
-export const Actions = (state, $) => ($ = {
-
+export const Actions = (state) => ({
+  set(key, val) {
+    if (!(key in state)) throw Error('Not a valid state property');
+    state[key] = val;
+  }
 });

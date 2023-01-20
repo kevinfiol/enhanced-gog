@@ -14,11 +14,10 @@
     "build": "node ./scripts/build.js"
   },
   "dependencies": {
-    "hyperapp": "^1.2.9",
-    "umai": "^0.1.2"
+    "umai": "0.1.4"
   },
   "devDependencies": {
-    "esbuild": "^0.14.48",
-    "servbot": "^0.2.6"
+    "esbuild": "0.17.3",
+    "servbot": "0.2.6"
   }
 }
