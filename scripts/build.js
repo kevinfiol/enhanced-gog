@@ -3,10 +3,11 @@ import esbuild from 'esbuild';
 import { resolve } from 'path';
 import { annotate } from './annotate.js';
 
+// https://github.com/evanw/esbuild/blob/main/CHANGELOG.md#0170
+
 export const OUTFILE = resolve('bin/enhanced-gog.user.js');
 
 const DEV = process.argv.includes('-d');
-const API_URL = process.env.API_URL;
 const ENTRY = resolve('src/index.js');
 const SERVER_PORT = 8081;
 

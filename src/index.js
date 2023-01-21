@@ -1,24 +1,27 @@
 import { m, mount, redraw } from 'umai';
 import { VERSION } from './config';
 import { State, Actions } from './state';
-import { Divider, Notifications } from './components';
+import { Divider, Notifications, Stats, Error, Spinner, CountrySelect } from './components';
 import { retrieveUserSettings, persistUserSettings } from './storage';
 import { getPriceData } from './itad';
 
 const App = ({ state, actions }) => (
   m('div',
     Divider(),
+
     m('div', { style: 'padding-top: 1.2em;' },
       state.currentLowest && state.historicalLow &&
         Notifications({ state })
       ,
 
       state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
-        ? m('p', 'stats')
-        : state.error ? m('p', 'error') : m('p', 'spinner')
+        ? Stats({ state })
+        : state.error
+          ? Error({ actions })
+          : Spinner()
       ,
 
-      m('p', 'country select')
+      CountrySelect({ state, actions })
     )
   )
 );
