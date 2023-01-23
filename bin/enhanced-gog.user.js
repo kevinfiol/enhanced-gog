@@ -21,7 +21,7 @@
 // ==/UserScript==
 
 (() => {
-  // node_modules/.pnpm/umai@0.1.4/node_modules/umai/dist/umai.js
+  // node_modules/.pnpm/umai@0.1.5/node_modules/umai/dist/umai.js
   var NIL = void 0;
   var REDRAWS = [];
   var CMP_KEY = "__m";
@@ -86,10 +86,7 @@
     }
   }
   function mount(el, cmp, env, redraw2) {
-    REDRAWS.push(redraw2 = (_) => {
-      console.log("REDRAW!");
-      requestAnimationFrame((_2) => render(el, { children: cmp() }, env));
-    });
+    REDRAWS.push(redraw2 = (_) => requestAnimationFrame((_2) => render(el, { children: cmp() }, env)));
     env = { redraw: redraw2 };
     return redraw2() && redraw2;
   }
@@ -122,7 +119,7 @@
   m.retain = (_) => m(RETAIN_KEY);
 
   // src/config.js
-  var VERSION = "1.3.2";
+  var VERSION = "1.4.0";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -572,3 +569,4 @@
     }).finally(redraw);
   }
 })();
+//# sourceMappingURL=enhanced-gog.user.js.map

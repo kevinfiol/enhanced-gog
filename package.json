@@ -1,6 +1,6 @@
 {
   "name": "enhanced-gog",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "enhances gog web experience",
   "main": "src/index.js",
   "author": "kevinfiol",
@@ -14,7 +14,7 @@
     "build": "node ./scripts/build.js"
   },
   "dependencies": {
-    "umai": "0.1.4"
+    "umai": "0.1.5"
   },
   "devDependencies": {
     "esbuild": "0.17.3",

@@ -21,6 +21,7 @@ const config = {
   entryPoints: [ENTRY],
   outfile: OUTFILE,
   bundle: true,
+  sourcemap: DEV,
   plugins: [{
     name: 'on-end',
     setup(build) {
