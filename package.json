@@ -14,7 +14,7 @@
     "build": "node ./scripts/build.js"
   },
   "dependencies": {
-    "umai": "0.1.5"
+    "umai": "0.1.7"
   },
   "devDependencies": {
     "esbuild": "0.17.3",

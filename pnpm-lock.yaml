@@ -3,10 +3,10 @@ lockfileVersion: 5.4
 specifiers:
   esbuild: 0.17.3
   servbot: 0.2.6
-  umai: 0.1.5
+  umai: 0.1.7
 
 dependencies:
-  umai: 0.1.5
+  umai: 0.1.7
 
 devDependencies:
   esbuild: 0.17.3
@@ -247,7 +247,7 @@ packages:
     engines: {node: '>=12.x', pnpm: 7.x}
     dev: true
 
-  /umai/0.1.5:
-    resolution: {integrity: sha512-BkULb1H0g8j/MLylmDdSL1EPn3wJaa66SKocdwrm7tv3mQLd/P/KC8vo8UvZKTjrCm4QhdgDr6gR0PEIUXqaUQ==}
+  /umai/0.1.7:
+    resolution: {integrity: sha512-QQA3Bbv+s0PGoKi7OZyYcvgdwyGRkp5gQuUhbkjgIDiBO3XWuEd67jzAtD2tBTwnW69pVMlTAFG/yBr+s1Sb5g==}
     engines: {node: '>=12.x'}
     dev: false
