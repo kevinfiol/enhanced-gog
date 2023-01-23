@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.3.2
+// @version 1.4.0
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -21,7 +21,7 @@
 // ==/UserScript==
 
 (() => {
-  // node_modules/.pnpm/umai@0.1.5/node_modules/umai/dist/umai.js
+  // node_modules/.pnpm/umai@0.1.7/node_modules/umai/dist/umai.js
   var NIL = void 0;
   var REDRAWS = [];
   var CMP_KEY = "__m";
@@ -53,13 +53,13 @@
           tmp = "";
         if (tmp === false)
           el.removeAttribute(i);
-        else if (i.startsWith("on"))
-          el[i] = isFn(fn = tmp) ? (ev) => (res = fn(ev)) instanceof Promise ? res.finally((_) => (redraw2(), res = NIL)) : (redraw2(), res = NIL) : NIL;
+        else if (i.startsWith("on") && isFn(fn = tmp))
+          el[i] = (ev) => (res = fn(ev)) instanceof Promise ? res.finally((_) => (redraw2(), res = NIL)) : (redraw2(), res = NIL);
         else
           el.setAttribute(i, tmp);
       }
     for (i = 0, tmp = [...el.getAttributeNames(), ...Object.keys(el)]; i < tmp.length; i++)
-      if (!(tmp[i] in v.attrs) && tmp[i] !== "class") {
+      if (!(tmp[i] in v.attrs)) {
         if (tmp[i].startsWith("on") && isFn(el[tmp[i]]))
           el[tmp[i]] = NIL;
         else
@@ -569,4 +569,3 @@
     }).finally(redraw);
   }
 })();
-//# sourceMappingURL=enhanced-gog.user.js.map
