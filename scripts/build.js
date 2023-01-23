@@ -2,6 +2,7 @@ import servbot from 'servbot';
 import esbuild from 'esbuild';
 import { resolve } from 'path';
 import { annotate } from './annotate.js';
+import packageJSON from '../package.json' assert { type: 'json' };
 
 export const OUTFILE = resolve('bin/enhanced-gog.user.js');
 const DEV = process.argv.includes('-d');
@@ -22,6 +23,9 @@ const config = {
   outfile: OUTFILE,
   bundle: true,
   sourcemap: DEV,
+  define: {
+    'process.env.VERSION': `"${packageJSON.version}"`
+  },
   plugins: [{
     name: 'on-end',
     setup(build) {
@@ -32,7 +36,7 @@ const config = {
         }
 
         logSuccess();
-        annotate();
+        annotate(packageJSON.version);
       });
     }
   }]

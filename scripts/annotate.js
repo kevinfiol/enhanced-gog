@@ -4,9 +4,10 @@ import { OUTFILE } from './build.js';
 
 const ANNOTATIONS_PATH = './annotations.txt';
 
-export function annotate() {
+export function annotate(version) {
     // get annotations as a string
-    const annotations = readFileSync(resolve(ANNOTATIONS_PATH), 'utf8');
+    let annotations = readFileSync(resolve(ANNOTATIONS_PATH), 'utf8');
+    annotations = annotations.replace('{{VERSION}}', version);
 
     // open bundled file to write to
     const bundleFile = readFileSync(resolve(OUTFILE));
