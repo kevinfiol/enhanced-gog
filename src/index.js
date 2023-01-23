@@ -9,7 +9,7 @@ const App = ({ state, actions }) => (
   m('div',
     Divider(),
 
-    m('div', { style: 'padding-top: 1.2em;' },
+    m('div', { style: 'padding: 1.2em 24px 0;' },
       state.currentLowest && state.historicalLow &&
         Notifications({ state })
       ,
@@ -17,7 +17,7 @@ const App = ({ state, actions }) => (
       state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
         ? Stats({ state })
         : state.error
-          ? Error({ actions })
+          ? Error({ state, actions })
           : Spinner()
       ,
 
@@ -46,8 +46,7 @@ if (product && typeof product === 'object') {
   const { userRegion, userCountry } = retrieveUserSettings();
 
   if (userRegion && userCountry) {
-    actions.set('userRegion', userRegion);
-    actions.set('userCountry', userCountry);
+    actions.set({ userRegion, userCountry });
   } else {
     // save defaults to storage
     persistUserSettings({
@@ -65,18 +64,15 @@ if (product && typeof product === 'object') {
   mount(container, () => App({ state, actions }));
 
   // fetch price data
-  getPriceData(state.gameId, userRegion, userCountry)
+  getPriceData(state.gameId, state.userRegion, state.userCountry)
     .then(([priceData, error]) => {
       if (error) throw error;
-
-      for (let key in priceData) {
-        // keys from priceData should match with state keys
-        actions.set(key, priceData[key]);
-      }
+      actions.setPriceData(priceData);
     })
-    .catch((e) => {
+    .catch((error) => {
       console.error('Enhanced GOG Failed to initialize.');
-      console.error(e);
+      console.error(error);
+      actions.set({ error });
     })
     .finally(redraw); // redraw app
 }

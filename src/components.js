@@ -1,5 +1,7 @@
-import { m } from 'umai';
+import { m, redraw } from 'umai';
 import { rules, createPriceFormatter } from './util';
+import { getPriceData } from './itad';
+import { persistUserSettings } from './storage';
 import region_map from './data/region_map.json';
 
 const Link = ({ href }, text) => (
@@ -45,7 +47,7 @@ export const Notifications = ({ state }) => {
       currentLowest && state.currentPrice <= currentLowest &&
         m('p',
           m('i', ''),
-          m('b', { style: { color: '#739c00' } }, '✓  CURRENT LOWEST PRICE.')
+          m('b', { style: 'color: #739c00' }, '✓  CURRENT LOWEST PRICE.')
         )
       ,
     )
@@ -53,56 +55,67 @@ export const Notifications = ({ state }) => {
 };
 
 export const Stats = ({ state }) => {
-  let tmp;
   const { currentLowest, historicalLow, historicalLowGOG, bundles } = state;
   const currency = region_map[state.userRegion][state.userCountry].currency;
   const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
 
   return (
     m('div', { style: rules({ fontSize: '13px', margin: '1em 0', lineHeight: '1.7em' }) },
-      (tmp = currentLowest && tmp.shop) &&
+      currentLowest.shop &&
         m('p',
           m('b', 'Current Lowest Price: '),
-          `${formatPrice(tmp.price_new.toFixed(2))} at`,
-          Link({ href: tmp.url }, tmp.shop.name),
-          tmp.drm[0] ? ` (DRM: ${tmp.drm[0]} ` : ' ',
-          '(', Link({ href: tmp.url }, 'Info'), ')'
+          `${formatPrice(currentLowest.price_new.toFixed(2))} at `,
+          Link({ href: currentLowest.url }, currentLowest.shop.name),
+          currentLowest.drm[0] ? ` (DRM: ${currentLowest.drm[0]}) ` : ' ',
+          '(', Link({ href: currentLowest.url }, 'Info'), ')'
         )
       ,
 
-      (tmp = historicalLow && tmp.shop) &&
+      historicalLow.shop &&
         m('p',
           m('b', {}, 'Historical Lowest Price: '),
-          `${ formatPrice(tmp.price.toFixed(2)) } at ${ tmp.shop.name } on ${ tmp.date } `,
-          '(', Link({ href: tmp.urls.history }, 'Info'), ')'
+          `${ formatPrice(historicalLow.price.toFixed(2)) } at ${ historicalLow.shop.name } on ${ historicalLow.date } `,
+          '(', Link({ href: historicalLow.urls.history }, 'Info'), ')'
         )
       ,
 
-      (tmp = historicalLowGOG && tmp.price) &&
+      historicalLowGOG.price &&
         m('p',
           m('b', {}, 'Historical Lowest Price on GOG: '),
-          `${ formatPrice(tmp.price.toFixed(2)) } on ${ tmp.date } `,
-          '(', Link({ href: tmp.urls.history + '?shop[]=gog&generate=Select+Stores' }, 'Info'), ')'
+          `${ formatPrice(historicalLowGOG.price.toFixed(2)) } on ${ historicalLowGOG.date } `,
+          '(', Link({ href: historicalLowGOG.urls.history + '?shop[]=gog&generate=Select+Stores' }, 'Info'), ')'
         )
       ,
 
-      (tmp = bundles && tmp.total) &&
+      bundles.total &&
         m('p',
           m('b', {}, 'Number of times this game has been in a bundle: '),
-          `${ tmp.total } `,
-          '(', Link({ href: tmp.urls.bundles }, 'Info'), ')'
+          `${ bundles.total } `,
+          '(', Link({ href: bundles.urls.bundles }, 'Info'), ')'
         )
       ,
     )
   );
 };
 
-export const Error = ({ actions }) => (
+export const Error = ({ state, actions }) => (
   m('div', { style: 'padding: 1em;' },
     m('span', 'Woops. Enhanced GOG encountered an error. Try another region or '),
     m('a', {
       style: 'text-decoration: underline; cursor: pointer;',
-      onclick: () => console.log('click try again')
+      onclick: async () => {
+        actions.reset();
+        redraw(); // redraw to show loading
+
+        const [priceData, error] = await getPriceData(
+          state.gameId,
+          state.userRegion,
+          state.userCountry
+        );
+
+        if (error) actions.set({ error });
+        else actions.setPriceData(priceData);
+      }
     }, 'click here to try again.')
   )
 );
@@ -110,7 +123,7 @@ export const Error = ({ actions }) => (
 export const Spinner = () => (
   m('div', { style: rules({ textAlign: 'center', width: '100%' }) },
       m('p', { style: 'padding: 1.5em 0 0.3em 0;' },
-          h('span', {
+          m('span', {
               class: 'menu-friends-empty__spinner is-spinning'
           })
       )
@@ -119,6 +132,7 @@ export const Spinner = () => (
 
 export const CountrySelect = ({ state, actions }) => {
   const regions = Object.keys(region_map); // ['eu1', 'eu2', 'us', 'ca', ...]
+  const countryValue = `${state.userRegion}-${state.userCountry}`;
 
   return (
     m('div', { style: rules({ margin: '1em 0 0 0', fontSize: '13px' }) },
@@ -132,18 +146,38 @@ export const CountrySelect = ({ state, actions }) => {
             backgroundColor: '#f6f6f6'
           }),
 
-          value: `${state.userRegion}-${state.userCountry}`,
+          value: countryValue,
 
-          onchange: (ev) => {
-            const [newRegion, newCountry] = ev.target.value.split('-');
-            console.log(ev.target.value);
+          onchange: async (ev) => {
+            const [userRegion, userCountry] = ev.target.value.split('-');
+
+            // reset price data first
+            actions.reset();
+            redraw();
+
+            // persist new country settings
+            persistUserSettings({ userRegion, userCountry });
+
+            // update state
+            actions.set({ userRegion, userCountry });
+
+            // retrieve new data
+            const [priceData, error] = await getPriceData(
+              state.gameId,
+              userRegion,
+              userCountry
+            );
+
+            if (error) actions.set({ error });
+            else actions.setPriceData(priceData);
           }
         },
           regions.map(region =>
             m('optgroup', { label: region },
-              Object.keys(region_map(region)).map(country =>
+              Object.keys(region_map[region]).map(country =>
                 m('option', {
-                  value: `${region}-${country}`
+                  value: `${region}-${country}`,
+                  selected: countryValue === `${region}-${country}`
                 }, region_map[region][country].name)
               )
             )

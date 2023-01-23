@@ -2,9 +2,8 @@ export const State = (init = {}) => ({
   gameId: undefined,
   currentPrice: undefined,
   pageCurrency: undefined,
-  regionMap: undefined,
   userRegion: 'us',
-  userCountry: 'us',
+  userCountry: 'US',
   currentLowest: undefined,
   historicalLow: undefined,
   historicalLowGOG: undefined,
@@ -13,9 +12,25 @@ export const State = (init = {}) => ({
   ...init
 });
 
-export const Actions = (state) => ({
-  set(key, val) {
-    if (!(key in state)) throw Error('Not a valid state property');
-    state[key] = val;
+export const Actions = (state, $) => ($ = {
+  set(obj) {
+    for (let k in obj) {
+      if (!(k in state)) throw Error('Not a valid state property');
+      state[k] = obj[k];
+    }
+  },
+
+  reset() {
+    $.set({
+      error: undefined,
+      historicalLow: undefined,
+      historicalLowGOG: undefined,
+      currentLowest: undefined,
+      bundles: undefined
+    });
+  },
+
+  setPriceData(data) {
+    $.set(data);
   }
 });

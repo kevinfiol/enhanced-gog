@@ -1,5 +1,5 @@
 import { API_KEY } from './config';
-import { capitalize, getDateStr, request } from '../util';
+import { capitalize, getDateStr, request } from './util';
 
 const shop = 'gog';
 
@@ -31,7 +31,10 @@ export async function getPlainId(gameId) {
 export async function getHistoricalLow(plainId, shops, region, country) {
   let [low, error] = [{}, undefined];
   const endpoint = api('v01', 'game', 'lowest');
-  const payload = { key: API_KEY, plains: plainId, region, country, shops };
+  const payload = { key: API_KEY, plains: plainId, region, country };
+
+  // this key must be omitted from the payload in order to get overall historical low
+  if (shops) payload.shops = shops;
 
   try {
     let res = await request('GET', endpoint, payload);
