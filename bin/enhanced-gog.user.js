@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.1
+// @version 1.4.2
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -119,7 +119,7 @@
   m.retain = (_) => m(RETAIN_KEY);
 
   // src/config.js
-  var VERSION = "1.4.1";
+  var VERSION = "1.4.2";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -410,7 +410,7 @@
         Link({ href: currentLowest.url }, currentLowest.shop.name),
         currentLowest.drm[0] ? ` (DRM: ${currentLowest.drm[0]}) ` : " ",
         "(",
-        Link({ href: currentLowest.url }, "Info"),
+        Link({ href: currentLowest.itad_url }, "Info"),
         ")"
       ),
       historicalLow.shop && m(

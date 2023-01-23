@@ -67,7 +67,7 @@ export const Stats = ({ state }) => {
           `${formatPrice(currentLowest.price_new.toFixed(2))} at `,
           Link({ href: currentLowest.url }, currentLowest.shop.name),
           currentLowest.drm[0] ? ` (DRM: ${currentLowest.drm[0]}) ` : ' ',
-          '(', Link({ href: currentLowest.url }, 'Info'), ')'
+          '(', Link({ href: currentLowest.itad_url }, 'Info'), ')'
         )
       ,
 
