@@ -9,7 +9,7 @@ const App = ({ state, actions }) => (
   m('div',
     Divider(),
 
-    m('div', { style: 'padding: 1.2em 24px 0;' },
+    m('div', { style: 'padding: 1.2em 24px;' },
       state.currentLowest && state.historicalLow &&
         Notifications({ state })
       ,
