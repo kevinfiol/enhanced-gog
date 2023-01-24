@@ -87,7 +87,7 @@ export const Stats = ({ state }) => {
         )
       ,
 
-      bundles.total &&
+      bundles.total !== undefined &&
         m('p',
           m('b', {}, 'Number of times this game has been in a bundle: '),
           `${ bundles.total } `,

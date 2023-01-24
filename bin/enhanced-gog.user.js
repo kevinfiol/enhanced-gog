@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.2
+// @version 1.4.3
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -119,7 +119,7 @@
   m.retain = (_) => m(RETAIN_KEY);
 
   // src/config.js
-  var VERSION = "1.4.2";
+  var VERSION = "1.4.3";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -429,7 +429,7 @@
         Link({ href: historicalLowGOG.urls.history + "?shop[]=gog&generate=Select+Stores" }, "Info"),
         ")"
       ),
-      bundles.total && m(
+      bundles.total !== void 0 && m(
         "p",
         m("b", {}, "Number of times this game has been in a bundle: "),
         `${bundles.total} `,
