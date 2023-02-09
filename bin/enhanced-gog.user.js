@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.3
+// @version 1.4.4
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -119,7 +119,7 @@
   m.retain = (_) => m(RETAIN_KEY);
 
   // src/config.js
-  var VERSION = "1.4.3";
+  var VERSION = "1.4.4";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -361,6 +361,7 @@
   var region_map_default = { eu1: { AL: { name: "Albania", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, AD: { name: "Andorra", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, AT: { name: "Austria", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, BE: { name: "Belgium", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, DK: { name: "Denmark", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, FI: { name: "Finland", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, FR: { name: "France", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, DE: { name: "Germany", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, IE: { name: "Ireland", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, LI: { name: "Liechtenstein", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, LU: { name: "Luxembourg", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, MK: { name: "Macedonia", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, NL: { name: "Netherlands", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, SE: { name: "Sweden", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, CH: { name: "Switzerland", region_code: "eu1", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } } }, eu2: { BA: { name: "Bosnia And Herzegovina", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, BG: { name: "Bulgaria", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, HR: { name: "Croatia", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, CY: { name: "Cyprus", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, CZ: { name: "Czech Republic", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, EE: { name: "Estonia", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, GR: { name: "Greece", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, VA: { name: "Holy See (Vatican City State)", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, HU: { name: "Hungary", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, IT: { name: "Italy", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, LV: { name: "Latvia", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, LT: { name: "Lithuania", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, MT: { name: "Malta", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, MC: { name: "Monaco", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, ME: { name: "Montenegro", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, NO: { name: "Norway", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, PL: { name: "Poland", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, PT: { name: "Portugal", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, RO: { name: "Romania", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, SM: { name: "San Marino", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, RS: { name: "Serbia", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, SK: { name: "Slovakia", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, SI: { name: "Slovenia", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } }, ES: { name: "Spain", region_code: "eu2", currency: { code: "EUR", sign: "\u20AC", delimiter: ",", left: false, html: "&euro;" } } }, uk: { GB: { name: "United Kingdom", region_code: "uk", currency: { code: "GBP", sign: "\xA3", delimiter: ".", left: true, html: "&pound;" } } }, us: { US: { name: "United States", region_code: "us", currency: { code: "USD", sign: "$", delimiter: ".", left: true, html: "$" } } }, ca: { CA: { name: "Canada", region_code: "ca", currency: { code: "CAD", sign: "$", delimiter: ".", left: true, html: "$" } } }, br2: { BR: { name: "Brazil 1", region_code: "br2", currency: { code: "BRL", sign: "R$", delimiter: ".", left: true, html: "R$" } }, BR2: { name: "Brazil 2", region_code: "br2", currency: { code: "BRL", sign: "R$", delimiter: ".", left: true, html: "R$" } } }, au2: { AU: { name: "Australia 1", region_code: "au2", currency: { code: "AUD", sign: "$", delimiter: ".", left: true, html: "$" } }, AU2: { name: "Australia 2", region_code: "au2", currency: { code: "AUD", sign: "$", delimiter: ".", left: true, html: "$" } } }, ru: { RU: { name: "Russian Federation", region_code: "ru", currency: { code: "RUB", sign: "\u0440\u0443\u0431", delimiter: ",", left: false, html: " p." } } }, tr: { TR: { name: "Turkey", region_code: "tr", currency: { code: "TRY", sign: "TL", delimiter: ",", left: false, html: " TL" } } }, cn: { CN: { name: "China", region_code: "cn", currency: { code: "CNY", sign: "\xA5", delimiter: ".", left: true, html: "&yen;" } } } };
 
   // src/components.js
+  var REGIONS = Object.keys(region_map_default);
   var Link = ({ href }, text) => m("a", { href, style: "text-decoration: underline" }, text);
   var Divider = () => m("div", {
     style: rules({
@@ -472,7 +473,6 @@
     )
   );
   var CountrySelect = ({ state, actions }) => {
-    const regions = Object.keys(region_map_default);
     const countryValue = `${state.userRegion}-${state.userCountry}`;
     return m(
       "div",
@@ -507,7 +507,7 @@
                 actions.setPriceData(priceData);
             }
           },
-          regions.map(
+          REGIONS.map(
             (region) => m(
               "optgroup",
               { label: region },

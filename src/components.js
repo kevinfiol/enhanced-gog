@@ -4,6 +4,8 @@ import { getPriceData } from './itad';
 import { persistUserSettings } from './storage';
 import region_map from './data/region_map.json';
 
+const REGIONS = Object.keys(region_map); // ['eu1', 'eu2', 'us', 'ca', ...]
+
 const Link = ({ href }, text) => (
   m('a', { href, style: 'text-decoration: underline' }, text)
 );
@@ -131,7 +133,6 @@ export const Spinner = () => (
 );
 
 export const CountrySelect = ({ state, actions }) => {
-  const regions = Object.keys(region_map); // ['eu1', 'eu2', 'us', 'ca', ...]
   const countryValue = `${state.userRegion}-${state.userCountry}`;
 
   return (
@@ -172,7 +173,7 @@ export const CountrySelect = ({ state, actions }) => {
             else actions.setPriceData(priceData);
           }
         },
-          regions.map(region =>
+          REGIONS.map(region =>
             m('optgroup', { label: region },
               Object.keys(region_map[region]).map(country =>
                 m('option', {
