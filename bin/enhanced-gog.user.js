@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.4
+// @version 1.4.5
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -119,7 +119,7 @@
   m.retain = (_) => m(RETAIN_KEY);
 
   // src/config.js
-  var VERSION = "1.4.4";
+  var VERSION = "1.4.5";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -217,7 +217,13 @@
         xhr.open(method, `${url}?${queryStr}`);
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(xhr.response);
+            let text = xhr.response;
+            try {
+              text = JSON.parse(text);
+            } catch {
+              text = text;
+            }
+            resolve(text);
           } else {
             reject(xhr.statusText);
           }

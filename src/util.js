@@ -73,7 +73,15 @@ export const request = (method, url, params) => {
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(xhr.response);
+          let text = xhr.response;
+
+          try {
+            text = JSON.parse(text);
+          } catch {
+            text = text;
+          }
+
+          resolve(text);
         } else {
           reject(xhr.statusText);
         }
