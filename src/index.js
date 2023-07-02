@@ -1,4 +1,4 @@
-import { m, mount, redraw } from 'umai';
+import { m, mount, redraw } from 'umhi';
 import { VERSION } from './config';
 import { State, Actions } from './state';
 import { Divider, Notifications, Stats, Error, Spinner, CountrySelect } from './components';

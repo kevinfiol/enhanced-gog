@@ -1,4 +1,4 @@
-import { m, redraw } from 'umai';
+import { m, redraw } from 'umhi';
 import { rules, createPriceFormatter } from './util';
 import { getPriceData } from './itad';
 import { persistUserSettings } from './storage';

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.5
+// @version 1.4.6
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -21,105 +21,98 @@
 // ==/UserScript==
 
 (() => {
-  // node_modules/.pnpm/umai@0.1.7/node_modules/umai/dist/umai.js
+  // node_modules/.pnpm/umhi@0.1.3/node_modules/umhi/dist/umhi.js
   var NIL = void 0;
   var REDRAWS = [];
-  var CMP_KEY = "__m";
-  var RETAIN_KEY = "=";
   var isArray = Array.isArray;
   var isStr = (x) => typeof x === "string";
   var isFn = (x) => typeof x === "function";
   var isObj = (x) => x !== null && typeof x === "object";
-  var noop = (_) => {
-  };
-  var isRenderable = (x) => x === null || typeof x === "string" || typeof x === "number" || x[CMP_KEY] || isArray(x);
-  var makeEl = (v) => v[CMP_KEY] ? document.createElement(v.tag) : document.createTextNode(v);
-  var addChildren = (x, children, i) => {
+  var createNode = (v) => document[v._cmp ? "createElement" : "createTextNode"](v.tag || v);
+  var addChildren = (x, children) => {
     if (isArray(x))
-      for (i = 0; i < x.length; i++)
+      for (let i = 0; i < x.length; i++)
         addChildren(x[i], children);
-    else if (x !== null && x !== false && x !== NIL)
+    else if (x != null && x !== false)
       children.push(x);
   };
-  var update = (el, v, env, redraw2) => {
-    redraw2 = env ? env.redraw : noop;
-    if (!v[CMP_KEY])
-      return el.data === v + "" || (el.data = v);
-    let i, tmp;
-    for (i in v.attrs)
-      if (el[i] !== (tmp = v.attrs[i])) {
-        let fn, res;
-        if (tmp === null || tmp === NIL || tmp === true)
-          tmp = "";
-        if (tmp === false)
-          el.removeAttribute(i);
-        else if (i.startsWith("on") && isFn(fn = tmp))
-          el[i] = (ev) => (res = fn(ev)) instanceof Promise ? res.finally((_) => (redraw2(), res = NIL)) : (redraw2(), res = NIL);
+  var update = (node, v, redraw2) => {
+    if (!v._cmp)
+      return node.nodeValue === v + "" || (node.nodeValue = v);
+    for (let i in v.props) {
+      let newProp = v.props[i];
+      if (i in node) {
+        if (redraw2 && i[0] === "o" && i[1] === "n" && isFn(newProp)) {
+          let res, fn = newProp;
+          node[i] = (ev) => (res = fn(ev)) instanceof Promise ? res.finally((_) => (redraw2(), res = NIL)) : (redraw2(), res = NIL);
+        } else
+          node[i] = newProp;
+      } else if (!isFn(newProp) && node.getAttribute(i) != newProp) {
+        if (newProp == null || newProp === false)
+          node.removeAttribute(i);
         else
-          el.setAttribute(i, tmp);
+          node.setAttribute(i, newProp);
       }
-    for (i = 0, tmp = [...el.getAttributeNames(), ...Object.keys(el)]; i < tmp.length; i++)
-      if (!(tmp[i] in v.attrs)) {
-        if (tmp[i].startsWith("on") && isFn(el[tmp[i]]))
-          el[tmp[i]] = NIL;
-        else
-          el.removeAttribute(tmp[i]);
-      }
+    }
+    for (let i = 0, names = [...node.getAttributeNames(), ...Object.keys(node)]; i < names.length; i++)
+      if (!(names[i] in v.props))
+        i in node ? node[names[i]] = NIL : node.removeAttribute(names[i]);
   };
-  function render(parent, x, env) {
-    let i, tmp, olds = parent.childNodes || [], children = x.children || [], news = isArray(children) ? children : [children];
+  function render(parent, cmp, redraw2) {
+    let i, tmp, olds = parent.childNodes || [], children = cmp.children || [], news = isArray(children) ? children : [children];
     for (i = 0, tmp = Array(Math.max(0, olds.length - news.length)); i < tmp.length; i++)
       parent.removeChild(parent.lastChild);
     for (i = 0; i < news.length; i++) {
-      let el, vnode = news[i];
-      if (vnode.tag === RETAIN_KEY)
-        continue;
-      el = olds[i] || makeEl(vnode);
+      let node, vnode = news[i];
+      node = olds[i] || createNode(vnode);
       if (!olds[i])
-        parent.appendChild(el);
-      if ((el.tagName || "") !== (vnode.tag || "").toUpperCase()) {
-        el = makeEl(vnode);
-        parent.replaceChild(el, olds[i]);
+        parent.appendChild(node);
+      else if ((node.tagName || "") !== (vnode.tag || "").toUpperCase()) {
+        node = createNode(vnode);
+        parent.replaceChild(node, olds[i]);
       }
-      update(el, vnode, env);
-      render(el, vnode, env);
+      update(node, vnode, redraw2);
+      render(node, vnode, redraw2);
     }
   }
-  function mount(el, cmp, env, redraw2) {
-    REDRAWS.push(redraw2 = (_) => requestAnimationFrame((_2) => render(el, { children: cmp() }, env)));
-    env = { redraw: redraw2 };
+  function mount(el, cmp) {
+    let redraw2;
+    el.innerHTML = "";
+    REDRAWS.push(
+      redraw2 = (_) => requestAnimationFrame(
+        (_2) => render(el, { children: cmp() }, redraw2)
+      )
+    );
     return redraw2() && redraw2;
   }
-  var redraw = (i) => {
-    for (i = 0; i < REDRAWS.length; i++)
-      REDRAWS[i]();
-  };
+  var redraw = (_) => REDRAWS.map((r) => r());
   function m(tag, ...tail) {
-    let k, tmp, classes, attrs = {}, children = [];
-    if (tail.length && !isRenderable(tail[0]))
-      [attrs, ...tail] = tail;
+    let k, tmp, classes, first = tail[0], props = {}, children = [];
+    if (isObj(first) && !isArray(first) && first.tag === NIL)
+      [props, ...tail] = tail;
     if (isStr(tag)) {
       [tag, ...classes] = tag.split(".");
       classes = classes.join(" ");
-      if (isObj(tmp = attrs.class)) {
+      if (isObj(tmp = props.class)) {
         for (k in tmp) {
           if (tmp[k]) {
-            classes && (classes += " ");
+            if (classes)
+              classes += " ";
             classes += k;
           }
         }
       }
       if (isStr(tmp))
         classes += !classes ? tmp : tmp ? " " + tmp : "";
-      classes && (attrs.class = classes);
+      if (classes)
+        props.class = classes;
     }
     addChildren(tail, children);
-    return { [CMP_KEY]: 1, tag, attrs: { ...attrs }, children };
+    return { _cmp: 1, tag, props: { ...props }, children };
   }
-  m.retain = (_) => m(RETAIN_KEY);
 
   // src/config.js
-  var VERSION = "1.4.5";
+  var VERSION = "1.4.6";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
