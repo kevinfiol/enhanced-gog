@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.6
+// @version 1.4.7
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -112,7 +112,7 @@
   }
 
   // src/config.js
-  var VERSION = "1.4.6";
+  var VERSION = "1.4.7";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -237,7 +237,8 @@
     const payload = { key: API_KEY, shop, game_id: gameId };
     try {
       const res = await request("GET", endpoint, payload);
-      if (!res[".meta"].match || !res[".meta"].active)
+      const isMatch = res[".meta"].match;
+      if (!isMatch)
         throw Error("Game Not Found.");
       plainId = res.data.plain;
     } catch (e) {

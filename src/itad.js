@@ -15,8 +15,10 @@ export async function getPlainId(gameId) {
 
   try {
     const res = await request('GET', endpoint, payload);
+    const isMatch = res['.meta'].match;
+    // const isActive = res['.meta'].active;
 
-    if (!res['.meta'].match || !res['.meta'].active)
+    if (!isMatch) // todo: change back to !isMatch || !isActive when API changes are stable
       throw Error('Game Not Found.');
 
     plainId = res.data.plain;
