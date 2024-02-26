@@ -21,7 +21,7 @@
 // ==/UserScript==
 
 (() => {
-  // node_modules/.pnpm/umhi@0.1.3/node_modules/umhi/dist/umhi.js
+  // node_modules/.pnpm/umhi@0.1.4/node_modules/umhi/dist/umhi.js
   var NIL = void 0;
   var REDRAWS = [];
   var isArray = Array.isArray;
@@ -36,6 +36,12 @@
     else if (x != null && x !== false)
       children.push(x);
   };
+  var styles = (obj) => {
+    let str = "";
+    for (let k in obj)
+      str += k.replace(/[A-Z]/g, (m2) => "-" + m2.toLowerCase()) + ":" + obj[k] + ";";
+    return str;
+  };
   var update = (node, v, redraw2) => {
     if (!v._cmp)
       return node.nodeValue === v + "" || (node.nodeValue = v);
@@ -45,8 +51,11 @@
         if (redraw2 && i[0] === "o" && i[1] === "n" && isFn(newProp)) {
           let res, fn = newProp;
           node[i] = (ev) => (res = fn(ev)) instanceof Promise ? res.finally((_) => (redraw2(), res = NIL)) : (redraw2(), res = NIL);
-        } else
+        } else {
+          if (i === "style" && isObj(newProp))
+            newProp = styles(newProp);
           node[i] = newProp;
+        }
       } else if (!isFn(newProp) && node.getAttribute(i) != newProp) {
         if (newProp == null || newProp === false)
           node.removeAttribute(i);
@@ -152,19 +161,6 @@
   };
 
   // src/util.js
-  function rules(obj) {
-    let val, tmp, key, str = "";
-    for (key in obj) {
-      val = obj[key];
-      if (tmp = key.match(/[A-Z]/)) {
-        key = key.split("");
-        key.splice(tmp.index, 1, "-" + tmp[0].toLowerCase());
-        key = key.join("");
-      }
-      str += key + ":" + val + ";";
-    }
-    return str;
-  }
   var createPriceFormatter = (sign, delimiter, left) => {
     return (price) => {
       const delimited_price = price.replace(".", delimiter);
@@ -191,56 +187,51 @@
           method,
           url: `${url}?${queryStr}`,
           onload: (res) => {
+            let json = {};
+            try {
+              json = JSON.parse(res.responseText);
+            } catch {
+            }
             if (res.status >= 200 && res.status < 300) {
-              let text = res.responseText;
-              try {
-                text = JSON.parse(text);
-              } catch {
-                text = text;
-              }
-              resolve(text);
+              resolve(json);
             } else {
-              reject(res.statusText);
+              reject(json);
             }
           },
-          onerror: (err) => reject(err.statusText)
+          onerror: (err) => reject(err)
         });
       } else {
         const xhr = new XMLHttpRequest();
         xhr.open(method, `${url}?${queryStr}`);
         xhr.onload = () => {
+          let json = {};
+          try {
+            json = JSON.parse(xhr.response);
+          } catch {
+          }
           if (xhr.status >= 200 && xhr.status < 300) {
-            let text = xhr.response;
-            try {
-              text = JSON.parse(text);
-            } catch {
-              text = text;
-            }
-            resolve(text);
+            resolve(json);
           } else {
-            reject(xhr.statusText);
+            reject(json);
           }
         };
-        xhr.onerror = () => reject(xhr.statusText);
+        xhr.onerror = () => reject(xhr);
         xhr.send();
       }
     });
   };
 
   // src/itad.js
-  var shop = "gog";
-  var api = (version, iface, method) => `https://api.isthereanydeal.com/${version}/${iface}/${method}/`;
+  var api = (iface, method, version) => `https://api.isthereanydeal.com/${iface}/${method}/${version}/`;
   var parseResponse = (res) => res.data[Object.keys(res.data)[0]];
   async function getPlainId(gameId) {
     let [plainId, error] = ["", void 0];
-    const endpoint = api("v02", "game", "plain");
-    const payload = { key: API_KEY, shop, game_id: gameId };
+    const endpoint = api("games", "lookup", "v1");
+    const payload = { key: API_KEY, title: "robocop-rogue-city" };
     try {
+      console.log({ endpoint, payload });
       const res = await request("GET", endpoint, payload);
-      const isMatch = res[".meta"].match;
-      if (!isMatch)
-        throw Error("Game Not Found.");
-      plainId = res.data.plain;
+      console.log({ res });
     } catch (e) {
       console.error(e);
       error = e;
@@ -364,13 +355,13 @@
   var REGIONS = Object.keys(region_map_default);
   var Link = ({ href }, text) => m("a", { href, style: "text-decoration: underline" }, text);
   var Divider = () => m("div", {
-    style: rules({
+    style: {
       boxShadow: "0px 4px 6px -2px rgba(0, 0, 0, 0.25)",
       height: "14px",
       position: "absolute",
       left: "0",
       width: "100%"
-    })
+    }
   });
   var Notifications = ({ state }) => {
     const historicalLow = state.historicalLow.price || void 0;
@@ -384,7 +375,7 @@
     }
     return m(
       "div",
-      { style: rules({ margin: "0.8em 0", lineHeight: "1.5em" }) },
+      { style: { margin: "0.8em 0", lineHeight: "1.5em" } },
       historicalLow && state.currentPrice <= historicalLow && m(
         "p",
         m("i", ""),
@@ -403,7 +394,7 @@
     const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
     return m(
       "div",
-      { style: rules({ fontSize: "13px", margin: "1em 0", lineHeight: "1.7em" }) },
+      { style: { fontSize: "13px", margin: "1em 0", lineHeight: "1.7em" } },
       currentLowest.shop && m(
         "p",
         m("b", "Current Lowest Price: "),
@@ -463,7 +454,7 @@
   );
   var Spinner = () => m(
     "div",
-    { style: rules({ textAlign: "center", width: "100%" }) },
+    { style: { textAlign: "center", width: "100%" } },
     m(
       "p",
       { style: "padding: 1.5em 0 0.3em 0;" },
@@ -476,19 +467,19 @@
     const countryValue = `${state.userRegion}-${state.userCountry}`;
     return m(
       "div",
-      { style: rules({ margin: "1em 0 0 0", fontSize: "13px" }) },
+      { style: { margin: "1em 0 0 0", fontSize: "13px" } },
       m("p", m("b", "Enhanced GOG Region")),
       m(
         "p",
         m(
           "select",
           {
-            style: rules({
+            style: {
               border: "1px solid #cecece",
               padding: "0.4em",
               margin: "0.5em 0 0 0",
               backgroundColor: "#f6f6f6"
-            }),
+            },
             value: countryValue,
             onchange: async (ev) => {
               const [userRegion, userCountry] = ev.target.value.split("-");
@@ -569,3 +560,4 @@
     }).finally(redraw);
   }
 })();
+//# sourceMappingURL=enhanced-gog.user.js.map

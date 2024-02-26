@@ -3,25 +3,27 @@ import { capitalize, getDateStr, request } from './util';
 
 const shop = 'gog';
 
-const api = (version, iface, method) =>
-  `https://api.isthereanydeal.com/${version}/${iface}/${method}/`;
+const api = (iface, method, version) =>
+  `https://api.isthereanydeal.com/${iface}/${method}/${version}/`;
 
 const parseResponse = res => res.data[Object.keys(res.data)[0]];
 
 export async function getPlainId(gameId) {
   let [plainId, error] = ['', undefined];
-  const endpoint = api('v02', 'game', 'plain');
-  const payload = { key: API_KEY, shop, game_id: gameId };
+  const endpoint = api('games', 'lookup', 'v1');
+  const payload = { key: API_KEY, title: 'robocop-rogue-city' };
 
   try {
+    console.log({endpoint, payload});
     const res = await request('GET', endpoint, payload);
-    const isMatch = res['.meta'].match;
+    console.log({res});
+    // const isMatch = res['.meta'].match;
     // const isActive = res['.meta'].active;
 
-    if (!isMatch) // todo: change back to !isMatch || !isActive when API changes are stable
-      throw Error('Game Not Found.');
+    // if (!isMatch) // todo: change back to !isMatch || !isActive when API changes are stable
+      // throw Error('Game Not Found.');
 
-    plainId = res.data.plain;
+    // plainId = res.data.plain;
   } catch (e) {
     console.error(e);
     error = e;

@@ -1,9 +1,13 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 dependencies:
   umhi:
-    specifier: ^0.1.3
-    version: 0.1.3
+    specifier: ^0.1.4
+    version: 0.1.4
 
 devDependencies:
   esbuild:
@@ -248,7 +252,7 @@ packages:
     engines: {node: '>=12.x', pnpm: 7.x}
     dev: true
 
-  /umhi@0.1.3:
-    resolution: {integrity: sha512-N7uRM/zyXBG1jo2N6hRAvkZdqOEwpqZkh4pDzbTEkIxKOHzBvN2PPLbX36vAa7XWY1qCiraI+v+W9mRHa8UYdA==}
+  /umhi@0.1.4:
+    resolution: {integrity: sha512-tbPScMSSXFr3sbxhkYeP0x2Gly8G4ID7aw3wApwDDi0ITXgrsssS+48d7GGlF4CElBoeTR+b/xLyhEXoVkav/A==}
     engines: {node: '>=12.x'}
     dev: false

@@ -1,23 +1,3 @@
-// transforms css style objects into style attribute strings
-// { borderRadius: '1px' } -> 'border-radius: 1px;'
-export function rules(obj) {
-  let val, tmp, key, str = '';
-
-  for (key in obj) {
-    val = obj[key];
-
-    if (tmp = key.match(/[A-Z]/)) {
-      key = key.split('')
-      key.splice(tmp.index, 1, '-' + tmp[0].toLowerCase());
-      key = key.join('');
-    }
-
-    str += key + ':' + val + ';';
-  }
-  
-  return str;
-}
-
 export const createPriceFormatter = (sign, delimiter, left) => {
   return (price) => {
     const delimited_price = price.replace('.', delimiter);
@@ -51,43 +31,39 @@ export const request = (method, url, params) => {
         method: method,
         url: `${url}?${queryStr}`,
         onload: res => {
+          let json = {};
+
+          try {
+            json = JSON.parse(res.responseText);
+          } catch { /* nothing */ }
+
           if (res.status >= 200 && res.status < 300) {
-            let text = res.responseText;
-
-            try {
-              text = JSON.parse(text);
-            } catch {
-              text = text;
-            }
-
-            resolve(text);
+            resolve(json);
           } else {
-            reject(res.statusText);
+            reject(json);
           }
         },
-        onerror: err => reject(err.statusText)
+        onerror: err => reject(err)
       });
     } else {
       const xhr = new XMLHttpRequest();
       xhr.open(method, `${ url }?${ queryStr }`);
 
       xhr.onload = () => {
+        let json = {};
+
+        try {
+          json = JSON.parse(xhr.response);
+        } catch { /* nothing */ }
+
         if (xhr.status >= 200 && xhr.status < 300) {
-          let text = xhr.response;
-
-          try {
-            text = JSON.parse(text);
-          } catch {
-            text = text;
-          }
-
-          resolve(text);
+          resolve(json);
         } else {
-          reject(xhr.statusText);
+          reject(json);
         }
       };
 
-      xhr.onerror = () => reject(xhr.statusText);
+      xhr.onerror = () => reject(xhr);
       xhr.send();
     }
   });

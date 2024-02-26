@@ -1,5 +1,5 @@
 import { m, redraw } from 'umhi';
-import { rules, createPriceFormatter } from './util';
+import { createPriceFormatter } from './util';
 import { getPriceData } from './itad';
 import { persistUserSettings } from './storage';
 import region_map from './data/region_map.json';
@@ -12,13 +12,13 @@ const Link = ({ href }, text) => (
 
 export const Divider = () => (
   m('div', {
-    style: rules({
+    style: {
       boxShadow: '0px 4px 6px -2px rgba(0, 0, 0, 0.25)',
       height: '14px',
       position: 'absolute',
       left: '0',
       width: '100%'
-    })
+    }
   })
 );
 
@@ -38,7 +38,7 @@ export const Notifications = ({ state }) => {
   }
 
   return (
-    m('div', { style: rules({ margin: '0.8em 0', lineHeight: '1.5em' }) },
+    m('div', { style: { margin: '0.8em 0', lineHeight: '1.5em' } },
       historicalLow && state.currentPrice <= historicalLow &&
         m('p',
           m('i', ''),
@@ -62,7 +62,7 @@ export const Stats = ({ state }) => {
   const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
 
   return (
-    m('div', { style: rules({ fontSize: '13px', margin: '1em 0', lineHeight: '1.7em' }) },
+    m('div', { style: { fontSize: '13px', margin: '1em 0', lineHeight: '1.7em' } },
       currentLowest.shop &&
         m('p',
           m('b', 'Current Lowest Price: '),
@@ -123,7 +123,7 @@ export const Error = ({ state, actions }) => (
 );
 
 export const Spinner = () => (
-  m('div', { style: rules({ textAlign: 'center', width: '100%' }) },
+  m('div', { style: { textAlign: 'center', width: '100%' } },
       m('p', { style: 'padding: 1.5em 0 0.3em 0;' },
           m('span', {
               class: 'menu-friends-empty__spinner is-spinning'
@@ -136,16 +136,16 @@ export const CountrySelect = ({ state, actions }) => {
   const countryValue = `${state.userRegion}-${state.userCountry}`;
 
   return (
-    m('div', { style: rules({ margin: '1em 0 0 0', fontSize: '13px' }) },
+    m('div', { style: { margin: '1em 0 0 0', fontSize: '13px' } },
       m('p', m('b', 'Enhanced GOG Region')),
       m('p',
         m('select', {
-          style: rules({
+          style: {
             border: '1px solid #cecece',
             padding: '0.4em',
             margin: '0.5em 0 0 0',
             backgroundColor: '#f6f6f6'
-          }),
+          },
 
           value: countryValue,
 
