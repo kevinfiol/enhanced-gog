@@ -126,7 +126,9 @@
 
   // src/state.js
   var State = (init = {}) => ({
-    gameId: void 0,
+    itadId: void 0,
+    itadSlug: void 0,
+    gogSlug: void 0,
     currentPrice: void 0,
     pageCurrency: void 0,
     userRegion: "us",
@@ -142,7 +144,7 @@
     set(obj) {
       for (let k in obj) {
         if (!(k in state))
-          throw Error("Not a valid state property");
+          throw Error(`Not a valid state property: ${k}`);
         state[k] = obj[k];
       }
     },
@@ -167,15 +169,14 @@
       return left ? `${sign}${delimited_price}` : `${delimited_price}${sign}`;
     };
   };
-  var capitalize = (str) => str.trim()[0].toUpperCase() + str.trim().slice(1);
-  var getDateStr = (unixTime) => {
-    const date = new Date(unixTime * 1e3);
+  var getDateStr = (timestamp) => {
+    const date = new Date(timestamp);
     const month = date.getMonth() + 1;
     const day = date.getDate();
     const year = date.getFullYear();
     return `${month}/${day}/${year}`;
   };
-  var request = (method, url, params) => {
+  var request = (method, url, { params = {}, body = {} }) => {
     const queryArr = Object.keys(params).map((key) => {
       return `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
     });
@@ -186,6 +187,8 @@
         xhr({
           method,
           url: `${url}?${queryStr}`,
+          data: JSON.stringify(body),
+          headers: { "Content-Type": "application/json" },
           onload: (res) => {
             let json = {};
             try {
@@ -202,6 +205,7 @@
         });
       } else {
         const xhr = new XMLHttpRequest();
+        xhr.setRequestHeader("Content-Type", "application/json");
         xhr.open(method, `${url}?${queryStr}`);
         xhr.onload = () => {
           let json = {};
@@ -216,90 +220,94 @@
           }
         };
         xhr.onerror = () => reject(xhr);
-        xhr.send();
+        xhr.send(JSON.stringify(body));
       }
     });
   };
 
   // src/itad.js
-  var api = (iface, method, version) => `https://api.isthereanydeal.com/${iface}/${method}/${version}/`;
-  var parseResponse = (res) => res.data[Object.keys(res.data)[0]];
-  async function getPlainId(gameId) {
-    let [plainId, error] = ["", void 0];
-    const endpoint = api("games", "lookup", "v1");
-    const payload = { key: API_KEY, title: "robocop-rogue-city" };
+  var GOG_SHOP_ID = 35;
+  var api = (iface, method, version) => `https://api.isthereanydeal.com/${iface}/${method}/${version}`;
+  async function getInfo(gameSlug) {
+    let [info, error] = [{ id: "", slug: "" }, void 0];
+    const endpoint = api("games", "search", "v1");
+    const params = { key: API_KEY, title: gameSlug, results: 1 };
     try {
-      console.log({ endpoint, payload });
-      const res = await request("GET", endpoint, payload);
-      console.log({ res });
+      const res = await request("GET", endpoint, { params });
+      if (!Array.isArray(res) || res.length === 0)
+        throw Error("Game Not Found.");
+      info.id = res[0].id;
+      info.slug = res[0].slug;
     } catch (e) {
-      console.error(e);
       error = e;
     }
-    return [plainId, error];
+    return [info, error];
   }
-  async function getHistoricalLow(plainId, shops, region, country) {
-    let [low, error] = [{}, void 0];
-    const endpoint = api("v01", "game", "lowest");
-    const payload = { key: API_KEY, plains: plainId, region, country };
-    if (shops)
-      payload.shops = shops;
+  async function getPriceOverview(id, country) {
+    let [overview, error] = [{ current: {}, historical: {} }, void 0];
+    const endpoint = api("games", "overview", "v2");
+    const params = { key: API_KEY, country };
+    const body = [id];
     try {
-      let res = await request("GET", endpoint, payload);
-      res = parseResponse(res);
-      if (res.price !== void 0 && res.price !== null) {
+      const res = await request("POST", endpoint, { params, body });
+      if (res.prices && res.prices.length > 0) {
+        const { current, lowest } = res.prices[0];
+        if (current.price) {
+          overview.current = {
+            drm: current.drm && current.drm.length > 0 ? current.drm[0].name : "",
+            price: current.price.amount,
+            shop: current.shop.name,
+            url: current.url,
+            date: getDateStr(current.timestamp)
+          };
+        }
+        if (lowest.price) {
+          overview.historical = {
+            drm: lowest.drm && lowest.drm.length > 0 ? lowest.drm[0].name : "",
+            price: lowest.price.amount,
+            shop: lowest.shop.name,
+            date: getDateStr(lowest.timestamp)
+          };
+        }
+      }
+    } catch (e) {
+      error = e;
+    }
+    return [overview, error];
+  }
+  async function getHistoricalLowGOG(id, country) {
+    let [low, error] = [{}, void 0];
+    const endpoint = api("games", "storelow", "v2");
+    const params = { key: API_KEY, country, shops: [GOG_SHOP_ID] };
+    const body = [id];
+    try {
+      let res = await request("POST", endpoint, { params, body });
+      const data = Array.isArray(res) && res.length > 0 ? res[0].lows[0] : void 0;
+      if (data !== void 0 && data.price) {
         low = {
-          date: getDateStr(res.added),
-          cut: res.cut,
-          price: res.price,
-          shop: res.shop,
-          urls: res.urls
+          price: data.price.amount,
+          shop: "GOG",
+          date: getDateStr(data.timestamp)
         };
       }
     } catch (e) {
-      console.error(e);
       error = e;
     }
     return [low, error];
   }
-  async function getCurrentLowest(plainId, region, country) {
-    let [lowest, error] = [{}, void 0];
-    const endpoint = api("v01", "game", "prices");
-    const payload = { key: API_KEY, plains: plainId, region, country };
-    try {
-      let res = await request("GET", endpoint, payload);
-      res = parseResponse(res);
-      if (res.list && res.list.length) {
-        lowest = res.list.reduce((a, c) => {
-          a = a.price_new >= c.price_new ? c : a;
-          return a;
-        }, { price_new: Infinity });
-        if (lowest.drm && lowest.drm[0])
-          lowest.drm[0] = capitalize(lowest.drm[0]);
-        lowest.itad_url = res.urls.game;
-      }
-    } catch (e) {
-      console.error(e);
-      error = e;
-    }
-    return [lowest, error];
-  }
-  async function getBundles(plainId, region) {
+  async function getBundles(id, country) {
     let [bundles, error] = [{}, void 0];
-    const endpoint = api("v01", "game", "bundles");
-    const payload = { key: API_KEY, plains: plainId, region };
+    const endpoint = api("games", "bundles", "v2");
+    const params = { key: API_KEY, id, country, expired: true };
     try {
-      let res = await request("GET", endpoint, payload);
-      res = parseResponse(res);
-      bundles.total = res.total;
-      bundles.urls = res.urls;
+      let res = await request("GET", endpoint, { params });
+      bundles.total = res.length;
     } catch (e) {
-      console.error(e);
       error = e;
     }
     return [bundles, error];
   }
-  async function getPriceData(gameId, userRegion, userCountry) {
+  async function getPriceData(gogSlug, userCountry) {
     let priceData = {
       historicalLow: {},
       historicalLowGOG: {},
@@ -308,14 +316,13 @@
     };
     let error = void 0;
     try {
-      let [plainId, idError] = await getPlainId(gameId);
-      if (idError)
-        throw idError;
+      let [info, infoError] = await getInfo(gogSlug);
+      if (infoError)
+        throw infoError;
       let res = await Promise.all([
-        getHistoricalLow(plainId, void 0, userRegion, userCountry),
-        getHistoricalLow(plainId, "gog", userRegion, userCountry),
-        getCurrentLowest(plainId, userRegion, userCountry),
-        getBundles(plainId, userRegion)
+        getPriceOverview(info.id, userCountry),
+        getHistoricalLowGOG(info.id, userCountry),
+        getBundles(info.id, userCountry)
       ]);
       let batchError = res.reduce((a, [_data, resError]) => {
         return resError ? resError : a;
@@ -323,13 +330,14 @@
       if (batchError)
         throw batchError;
       priceData = {
-        historicalLow: res[0][0],
+        itadId: info.id,
+        itadSlug: info.slug,
+        currentLowest: res[0][0].current,
+        historicalLow: res[0][0].historical,
         historicalLowGOG: res[1][0],
-        currentLowest: res[2][0],
-        bundles: res[3][0]
+        bundles: res[2][0]
       };
     } catch (e) {
-      console.error("Error retrieving all price data.", e);
       error = e;
     }
     return [priceData, error];
@@ -389,28 +397,30 @@
     );
   };
   var Stats = ({ state }) => {
-    const { currentLowest, historicalLow, historicalLowGOG, bundles } = state;
+    const { currentLowest, historicalLow, historicalLowGOG, bundles, slug } = state;
     const currency = region_map_default[state.userRegion][state.userCountry].currency;
     const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
+    const infoUrl = `https://isthereanydeal.com/game/${slug}/info/`;
+    const historyUrl = `https://isthereanydeal.com/game/${slug}/history/`;
     return m(
       "div",
       { style: { fontSize: "13px", margin: "1em 0", lineHeight: "1.7em" } },
-      currentLowest.shop && m(
+      currentLowest.price && m(
         "p",
         m("b", "Current Lowest Price: "),
-        `${formatPrice(currentLowest.price_new.toFixed(2))} at `,
-        Link({ href: currentLowest.url }, currentLowest.shop.name),
-        currentLowest.drm[0] ? ` (DRM: ${currentLowest.drm[0]}) ` : " ",
+        `${formatPrice(currentLowest.price.toFixed(2))} at `,
+        Link({ href: currentLowest.url }, currentLowest.shop),
+        currentLowest.drm ? ` (DRM: ${currentLowest.drm}) ` : " ",
         "(",
-        Link({ href: currentLowest.itad_url }, "Info"),
+        Link({ href: infoUrl }, "Info"),
         ")"
       ),
-      historicalLow.shop && m(
+      historicalLow.price && m(
         "p",
         m("b", {}, "Historical Lowest Price: "),
-        `${formatPrice(historicalLow.price.toFixed(2))} at ${historicalLow.shop.name} on ${historicalLow.date} `,
+        `${formatPrice(historicalLow.price.toFixed(2))} at ${historicalLow.shop} on ${historicalLow.date} `,
         "(",
-        Link({ href: historicalLow.urls.history }, "Info"),
+        Link({ href: historyUrl }, "Info"),
         ")"
       ),
       historicalLowGOG.price && m(
@@ -418,7 +428,7 @@
         m("b", {}, "Historical Lowest Price on GOG: "),
         `${formatPrice(historicalLowGOG.price.toFixed(2))} on ${historicalLowGOG.date} `,
         "(",
-        Link({ href: historicalLowGOG.urls.history + "?shop[]=gog&generate=Select+Stores" }, "Info"),
+        Link({ href: historyUrl }, "Info"),
         ")"
       ),
       bundles.total !== void 0 && m(
@@ -426,7 +436,7 @@
         m("b", {}, "Number of times this game has been in a bundle: "),
         `${bundles.total} `,
         "(",
-        Link({ href: bundles.urls.bundles }, "Info"),
+        Link({ href: infoUrl }, "Info"),
         ")"
       )
     );
@@ -488,8 +498,7 @@
               persistUserSettings({ userRegion, userCountry });
               actions.set({ userRegion, userCountry });
               const [priceData, error] = await getPriceData(
-                state.gameId,
-                userRegion,
+                state.gogSlug,
                 userCountry
               );
               if (error)
@@ -531,7 +540,7 @@
   if (product && typeof product === "object") {
     console.log(`== Enhanced GOG ${VERSION} ==`);
     const state = State({
-      gameId: product.cardProductId,
+      gogSlug: product.cardProductSlug,
       currentPrice: product.cardProduct.price.finalAmount,
       pageCurrency: product.currency
     });
@@ -549,7 +558,7 @@
     container.className = "enhanced-gog-container";
     document.querySelector("div.product-actions").appendChild(container);
     mount(container, () => App({ state, actions }));
-    getPriceData(state.gameId, state.userRegion, state.userCountry).then(([priceData, error]) => {
+    getPriceData(state.gogSlug, state.userCountry).then(([priceData, error]) => {
       if (error)
         throw error;
       actions.setPriceData(priceData);

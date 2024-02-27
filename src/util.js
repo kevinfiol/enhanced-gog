@@ -5,10 +5,8 @@ export const createPriceFormatter = (sign, delimiter, left) => {
   };
 };
 
-export const capitalize = str => str.trim()[0].toUpperCase() + str.trim().slice(1);
-
-export const getDateStr = unixTime => {
-  const date = new Date(unixTime * 1000);
+export const getDateStr = timestamp => {
+  const date = new Date(timestamp);
   const month = date.getMonth() + 1;
   const day = date.getDate();
   const year = date.getFullYear();
@@ -16,7 +14,7 @@ export const getDateStr = unixTime => {
   return `${month}/${day}/${year}`;
 };
 
-export const request = (method, url, params) => {
+export const request = (method, url, { params = {}, body = {} }) => {
   const queryArr = Object.keys(params).map(key => {
     return `${ encodeURIComponent(key) }=${ encodeURIComponent(params[key]) }`;
   });
@@ -30,6 +28,8 @@ export const request = (method, url, params) => {
       xhr({
         method: method,
         url: `${url}?${queryStr}`,
+        data: JSON.stringify(body),
+        headers: { 'Content-Type': 'application/json' },
         onload: res => {
           let json = {};
 
@@ -47,6 +47,7 @@ export const request = (method, url, params) => {
       });
     } else {
       const xhr = new XMLHttpRequest();
+      xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.open(method, `${ url }?${ queryStr }`);
 
       xhr.onload = () => {
@@ -64,7 +65,7 @@ export const request = (method, url, params) => {
       };
 
       xhr.onerror = () => reject(xhr);
-      xhr.send();
+      xhr.send(JSON.stringify(body));
     }
   });
 };

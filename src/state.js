@@ -1,5 +1,7 @@
 export const State = (init = {}) => ({
-  gameId: undefined,
+  itadId: undefined,
+  itadSlug: undefined,
+  gogSlug: undefined,
   currentPrice: undefined,
   pageCurrency: undefined,
   userRegion: 'us',
@@ -15,7 +17,7 @@ export const State = (init = {}) => ({
 export const Actions = (state, $) => ($ = {
   set(obj) {
     for (let k in obj) {
-      if (!(k in state)) throw Error('Not a valid state property');
+      if (!(k in state)) throw Error(`Not a valid state property: ${k}`);
       state[k] = obj[k];
     }
   },

@@ -57,27 +57,29 @@ export const Notifications = ({ state }) => {
 };
 
 export const Stats = ({ state }) => {
-  const { currentLowest, historicalLow, historicalLowGOG, bundles } = state;
+  const { currentLowest, historicalLow, historicalLowGOG, bundles, slug } = state;
   const currency = region_map[state.userRegion][state.userCountry].currency;
   const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
+  const infoUrl = `https://isthereanydeal.com/game/${slug}/info/`;
+  const historyUrl = `https://isthereanydeal.com/game/${slug}/history/`;
 
   return (
     m('div', { style: { fontSize: '13px', margin: '1em 0', lineHeight: '1.7em' } },
-      currentLowest.shop &&
+      currentLowest.price &&
         m('p',
           m('b', 'Current Lowest Price: '),
-          `${formatPrice(currentLowest.price_new.toFixed(2))} at `,
-          Link({ href: currentLowest.url }, currentLowest.shop.name),
-          currentLowest.drm[0] ? ` (DRM: ${currentLowest.drm[0]}) ` : ' ',
-          '(', Link({ href: currentLowest.itad_url }, 'Info'), ')'
+          `${formatPrice(currentLowest.price.toFixed(2))} at `,
+          Link({ href: currentLowest.url }, currentLowest.shop),
+          currentLowest.drm ? ` (DRM: ${currentLowest.drm}) ` : ' ',
+          '(', Link({ href: infoUrl }, 'Info'), ')'
         )
       ,
 
-      historicalLow.shop &&
+      historicalLow.price &&
         m('p',
           m('b', {}, 'Historical Lowest Price: '),
-          `${ formatPrice(historicalLow.price.toFixed(2)) } at ${ historicalLow.shop.name } on ${ historicalLow.date } `,
-          '(', Link({ href: historicalLow.urls.history }, 'Info'), ')'
+          `${ formatPrice(historicalLow.price.toFixed(2)) } at ${ historicalLow.shop } on ${ historicalLow.date } `,
+          '(', Link({ href: historyUrl }, 'Info'), ')'
         )
       ,
 
@@ -85,7 +87,7 @@ export const Stats = ({ state }) => {
         m('p',
           m('b', {}, 'Historical Lowest Price on GOG: '),
           `${ formatPrice(historicalLowGOG.price.toFixed(2)) } on ${ historicalLowGOG.date } `,
-          '(', Link({ href: historicalLowGOG.urls.history + '?shop[]=gog&generate=Select+Stores' }, 'Info'), ')'
+          '(', Link({ href: historyUrl }, 'Info'), ')'
         )
       ,
 
@@ -93,7 +95,7 @@ export const Stats = ({ state }) => {
         m('p',
           m('b', {}, 'Number of times this game has been in a bundle: '),
           `${ bundles.total } `,
-          '(', Link({ href: bundles.urls.bundles }, 'Info'), ')'
+          '(', Link({ href: infoUrl }, 'Info'), ')'
         )
       ,
     )
@@ -164,8 +166,7 @@ export const CountrySelect = ({ state, actions }) => {
 
             // retrieve new data
             const [priceData, error] = await getPriceData(
-              state.gameId,
-              userRegion,
+              state.gogSlug,
               userCountry
             );
 

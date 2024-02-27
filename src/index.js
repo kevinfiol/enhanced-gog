@@ -35,7 +35,7 @@ if (product && typeof product === 'object') {
 
   // create state
   const state = State({
-    gameId: product.cardProductId,
+    gogSlug: product.cardProductSlug,
     currentPrice: product.cardProduct.price.finalAmount,
     pageCurrency: product.currency
   });
@@ -64,7 +64,7 @@ if (product && typeof product === 'object') {
   mount(container, () => App({ state, actions }));
 
   // fetch price data
-  getPriceData(state.gameId, state.userRegion, state.userCountry)
+  getPriceData(state.gogSlug, state.userCountry)
     .then(([priceData, error]) => {
       if (error) throw error;
       actions.setPriceData(priceData);
