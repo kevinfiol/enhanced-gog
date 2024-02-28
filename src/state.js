@@ -1,15 +1,18 @@
 export const State = (init = {}) => ({
-  itadId: undefined,
+  collapsed: false,
+  gameTitle: undefined,
   itadSlug: undefined,
-  gogSlug: undefined,
   currentPrice: undefined,
   pageCurrency: undefined,
-  userRegion: 'us',
+  userRegion: 'us', // deprecated
   userCountry: 'US',
+
+  // price data
   currentLowest: undefined,
   historicalLow: undefined,
   historicalLowGOG: undefined,
-  bundles: undefined,
+  totalBundles: undefined,
+  currentBundles: undefined,
   error: undefined,
   ...init
 });
@@ -24,15 +27,12 @@ export const Actions = (state, $) => ($ = {
 
   reset() {
     $.set({
-      error: undefined,
+      currentLowest: undefined,
       historicalLow: undefined,
       historicalLowGOG: undefined,
-      currentLowest: undefined,
-      bundles: undefined
+      totalBundles: undefined,
+      currentBundles: undefined,
+      error: undefined,
     });
-  },
-
-  setPriceData(data) {
-    $.set(data);
   }
 });

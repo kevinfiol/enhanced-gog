@@ -23,8 +23,8 @@ export const Divider = () => (
 );
 
 export const Notifications = ({ state }) => {
-  const historicalLow = state.historicalLow.price || undefined;
-  const currentLowest = state.currentLowest.price_new || undefined;
+  const historicalLow = state.historicalLow.price;
+  const currentLowest = state.currentLowest.price;
   const userCurrency = region_map[state.userRegion][state.userCountry].currency.code;
 
   if (
@@ -38,7 +38,7 @@ export const Notifications = ({ state }) => {
   }
 
   return (
-    m('div', { style: { margin: '0.8em 0', lineHeight: '1.5em' } },
+    m('div', { style: { margin: '0.8em 0 0.4em 0', lineHeight: '1.5em' } },
       historicalLow && state.currentPrice <= historicalLow &&
         m('p',
           m('i', ''),
@@ -57,11 +57,11 @@ export const Notifications = ({ state }) => {
 };
 
 export const Stats = ({ state }) => {
-  const { currentLowest, historicalLow, historicalLowGOG, bundles, slug } = state;
+  const { currentLowest, historicalLow, historicalLowGOG, totalBundles, currentBundles, itadSlug } = state;
   const currency = region_map[state.userRegion][state.userCountry].currency;
   const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
-  const infoUrl = `https://isthereanydeal.com/game/${slug}/info/`;
-  const historyUrl = `https://isthereanydeal.com/game/${slug}/history/`;
+  const infoUrl = `https://isthereanydeal.com/game/${itadSlug}/info/`;
+  const historyUrl = `https://isthereanydeal.com/game/${itadSlug}/history/`;
 
   return (
     m('div', { style: { fontSize: '13px', margin: '1em 0', lineHeight: '1.7em' } },
@@ -77,7 +77,7 @@ export const Stats = ({ state }) => {
 
       historicalLow.price &&
         m('p',
-          m('b', {}, 'Historical Lowest Price: '),
+          m('b', 'Historical Lowest Price: '),
           `${ formatPrice(historicalLow.price.toFixed(2)) } at ${ historicalLow.shop } on ${ historicalLow.date } `,
           '(', Link({ href: historyUrl }, 'Info'), ')'
         )
@@ -85,17 +85,28 @@ export const Stats = ({ state }) => {
 
       historicalLowGOG.price &&
         m('p',
-          m('b', {}, 'Historical Lowest Price on GOG: '),
+          m('b', 'Historical Lowest Price on GOG: '),
           `${ formatPrice(historicalLowGOG.price.toFixed(2)) } on ${ historicalLowGOG.date } `,
           '(', Link({ href: historyUrl }, 'Info'), ')'
         )
       ,
 
-      bundles.total !== undefined &&
+      totalBundles !== undefined &&
         m('p',
-          m('b', {}, 'Number of times this game has been in a bundle: '),
-          `${ bundles.total } `,
+          m('b', 'Number of times this game has been in a bundle: '),
+          `${ totalBundles } `,
           '(', Link({ href: infoUrl }, 'Info'), ')'
+        )
+      ,
+
+      currentBundles.length > 0 &&
+        m('p', { style: 'color: #739c00' },
+          m('b', 'This game is currently in these bundles:'),
+          m('ul',
+            currentBundles.map((bundle) =>
+              m('li', Link({ href: bundle.url }, bundle.title))
+            )
+          )
         )
       ,
     )
@@ -112,13 +123,12 @@ export const Error = ({ state, actions }) => (
         redraw(); // redraw to show loading
 
         const [priceData, error] = await getPriceData(
-          state.gameId,
-          state.userRegion,
+          state.gameTitle,
           state.userCountry
         );
 
         if (error) actions.set({ error });
-        else actions.setPriceData(priceData);
+        else actions.set(priceData);
       }
     }, 'click here to try again.')
   )
@@ -126,11 +136,11 @@ export const Error = ({ state, actions }) => (
 
 export const Spinner = () => (
   m('div', { style: { textAlign: 'center', width: '100%' } },
-      m('p', { style: 'padding: 1.5em 0 0.3em 0;' },
-          m('span', {
-              class: 'menu-friends-empty__spinner is-spinning'
-          })
-      )
+    m('p', { style: 'padding: 1.5em 0 1em 0;' },
+      m('span', {
+          class: 'menu-friends-empty__spinner is-spinning'
+      })
+    )
   )
 );
 
@@ -138,7 +148,7 @@ export const CountrySelect = ({ state, actions }) => {
   const countryValue = `${state.userRegion}-${state.userCountry}`;
 
   return (
-    m('div', { style: { margin: '1em 0 0 0', fontSize: '13px' } },
+    m('div', { style: { margin: '1em 0', fontSize: '13px' } },
       m('p', m('b', 'Enhanced GOG Region')),
       m('p',
         m('select', {
@@ -166,12 +176,12 @@ export const CountrySelect = ({ state, actions }) => {
 
             // retrieve new data
             const [priceData, error] = await getPriceData(
-              state.gogSlug,
+              state.gameTitle,
               userCountry
             );
 
             if (error) actions.set({ error });
-            else actions.setPriceData(priceData);
+            else actions.set(priceData);
           }
         },
           REGIONS.map(region =>

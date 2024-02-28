@@ -5,26 +5,71 @@ import { Divider, Notifications, Stats, Error, Spinner, CountrySelect } from './
 import { retrieveUserSettings, persistUserSettings } from './storage';
 import { getPriceData } from './itad';
 
-const App = ({ state, actions }) => (
-  m('div',
-    Divider(),
+const App = ({ state, actions }) => {
+  const isLoading = !(
+    state.currentLowest ||
+    state.historicalLow ||
+    state.historicalLowGOG ||
+    state.totalBundles ||
+    state.currentBundles
+  );
 
-    m('div', { style: 'padding: 1.2em 24px;' },
-      state.currentLowest && state.historicalLow &&
-        Notifications({ state })
-      ,
+  const showContent = !isLoading && !state.error;
 
-      state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles
-        ? Stats({ state })
-        : state.error
+  return (
+    m('div',
+      Divider(),
+
+      m('div', { style: { padding: '1.2em 24px' } },
+        showContent &&
+          Notifications({ state })
+        ,
+
+        state.error
           ? Error({ state, actions })
-          : Spinner()
-      ,
+          : isLoading
+          ? Spinner()
+          : null
+        ,
 
-      CountrySelect({ state, actions })
+        m('div', {
+          style: {
+            display: 'grid',
+            gridTemplateRows: state.collapsed ? '0fr' : '1fr',
+            transition: 'grid-template-rows 0.3s ease'
+          }
+        },
+          m('div', {
+            style: { overflow: 'hidden' }
+          },
+            showContent &&
+              Stats({ state })
+            ,
+
+            CountrySelect({ state, actions })
+          ),
+        ),
+
+        m('div', { style: { textAlign: 'center' } },
+          m('button', {
+            style: {
+              fontSize: '13px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              border: '1px solid rgba(100, 100, 100, 0.2)',
+              padding: '0.5em'
+            },
+            onclick: () => {
+              const collapsed = !state.collapsed;
+              actions.set({ collapsed });
+              persistUserSettings({ collapsed });
+            }
+          }, state.collapsed ? 'Show Enhanced GOG ▴' : 'Hide ▾')
+        )
+      )
     )
-  )
-);
+  );
+};
 
 // get product data from window object
 const product = unsafeWindow.productcardData;
@@ -35,21 +80,22 @@ if (product && typeof product === 'object') {
 
   // create state
   const state = State({
-    gogSlug: product.cardProductSlug,
-    currentPrice: product.cardProduct.price.finalAmount,
+    gameTitle: product.cardProduct.title,
+    currentPrice: Number(product.cardProduct.price.finalAmount),
     pageCurrency: product.currency
   });
 
   const actions = Actions(state);
 
   // read from storage and update state if necessary
-  const { userRegion, userCountry } = retrieveUserSettings();
+  const { collapsed, userRegion, userCountry } = retrieveUserSettings();
 
-  if (userRegion && userCountry) {
-    actions.set({ userRegion, userCountry });
+  if (collapsed && userRegion && userCountry) {
+    actions.set({ collapsed, userRegion, userCountry });
   } else {
     // save defaults to storage
     persistUserSettings({
+      collapsed: state.collapsed,
       userRegion: state.userRegion,
       userCountry: state.userCountry
     });
@@ -64,10 +110,10 @@ if (product && typeof product === 'object') {
   mount(container, () => App({ state, actions }));
 
   // fetch price data
-  getPriceData(state.gogSlug, state.userCountry)
+  getPriceData(state.gameTitle, state.userCountry)
     .then(([priceData, error]) => {
       if (error) throw error;
-      actions.setPriceData(priceData);
+      actions.set(priceData);
     })
     .catch((error) => {
       console.error('Enhanced GOG Failed to initialize.');

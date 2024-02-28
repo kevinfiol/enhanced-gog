@@ -6,10 +6,10 @@ const GOG_SHOP_ID = 35;
 const api = (iface, method, version) =>
   `https://api.isthereanydeal.com/${iface}/${method}/${version}`;
 
-export async function getInfo(gameSlug) {
+export async function getInfo(gameTitle) {
   let [info, error] = [{ id: '', slug: '' }, undefined];
   const endpoint = api('games', 'search', 'v1');
-  const params = { key: API_KEY, title: gameSlug, results: 1 };
+  const params = { key: API_KEY, title: gameTitle, results: 1 };
 
   try {
     const res = await request('GET', endpoint, { params });
@@ -27,7 +27,11 @@ export async function getInfo(gameSlug) {
 }
 
 export async function getPriceOverview(id, country) {
-  let [overview, error] = [{ current: {}, historical: {} }, undefined];
+  let [overview, error] = [
+    { current: {}, historical: {}, bundles: 0 },
+    undefined
+  ];
+
   const endpoint = api('games', 'overview', 'v2');
   const params = { key: API_KEY, country };
   const body = [id];
@@ -57,6 +61,10 @@ export async function getPriceOverview(id, country) {
         }
       }
     }
+
+    if (res.bundles) {
+      overview.bundles = res.bundles.length;
+    }
   } catch (e) {
     error = e;
   }
@@ -81,7 +89,7 @@ export async function getHistoricalLowGOG(id, country) {
         price: data.price.amount,
         shop: 'GOG',
         date: getDateStr(data.timestamp)
-      }
+      };
     }
   } catch (e) {
     error = e;
@@ -90,14 +98,24 @@ export async function getHistoricalLowGOG(id, country) {
   return [low, error];
 }
 
-export async function getBundles(id, country) {
-  let [bundles, error] = [{}, undefined];
+export async function getCurrentBundles(id, country) {
+  let [bundles, error] = [[], undefined];
   const endpoint = api('games', 'bundles', 'v2');
-  const params = { key: API_KEY, id, country, expired: true };
+  const params = { key: API_KEY, id, country, expired: false };
 
   try {
     let res = await request('GET', endpoint, { params });
-    bundles.total = res.length;
+
+    if (Array.isArray(res)) {
+      bundles = res.map((bundle) => {
+        const url = (new URL(bundle.url)).searchParams.get('URL') || bundle.url;
+
+        return {
+          title: bundle.title,
+          url
+        };
+      })
+    }
   } catch (e) {
     error = e;
   }
@@ -105,7 +123,7 @@ export async function getBundles(id, country) {
   return [bundles, error];
 }
 
-export async function getPriceData(gogSlug, userCountry) {
+export async function getPriceData(gameTitle, userCountry) {
   let priceData = {
     historicalLow: {},
     historicalLowGOG: {},
@@ -116,13 +134,13 @@ export async function getPriceData(gogSlug, userCountry) {
   let error = undefined;
 
   try {
-    let [info, infoError] = await getInfo(gogSlug);
+    let [{ id, slug }, infoError] = await getInfo(gameTitle);
     if (infoError) throw infoError;
 
     let res = await Promise.all([
-      getPriceOverview(info.id, userCountry),
-      getHistoricalLowGOG(info.id, userCountry),
-      getBundles(info.id, userCountry)
+      getPriceOverview(id, userCountry),
+      getHistoricalLowGOG(id, userCountry),
+      getCurrentBundles(id, userCountry)
     ]);
 
     // find and throw an error if one occurred
@@ -133,12 +151,12 @@ export async function getPriceData(gogSlug, userCountry) {
     if (batchError) throw batchError;
 
     priceData = {
-      itadId: info.id,
-      itadSlug: info.slug,
+      itadSlug: slug,
       currentLowest: res[0][0].current,
       historicalLow: res[0][0].historical,
+      totalBundles: res[0][0].bundles,
       historicalLowGOG: res[1][0],
-      bundles: res[2][0]
+      currentBundles: res[2][0]
     };
   } catch (e) {
     error = e;

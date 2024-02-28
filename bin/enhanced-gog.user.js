@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.4.7
+// @version 1.5.0
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -121,22 +121,25 @@
   }
 
   // src/config.js
-  var VERSION = "1.4.7";
+  var VERSION = "1.5.0";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
   var State = (init = {}) => ({
-    itadId: void 0,
+    collapsed: false,
+    gameTitle: void 0,
     itadSlug: void 0,
-    gogSlug: void 0,
     currentPrice: void 0,
     pageCurrency: void 0,
     userRegion: "us",
+    // deprecated
     userCountry: "US",
+    // price data
     currentLowest: void 0,
     historicalLow: void 0,
     historicalLowGOG: void 0,
-    bundles: void 0,
+    totalBundles: void 0,
+    currentBundles: void 0,
     error: void 0,
     ...init
   });
@@ -150,15 +153,13 @@
     },
     reset() {
       $.set({
-        error: void 0,
+        currentLowest: void 0,
         historicalLow: void 0,
         historicalLowGOG: void 0,
-        currentLowest: void 0,
-        bundles: void 0
+        totalBundles: void 0,
+        currentBundles: void 0,
+        error: void 0
       });
-    },
-    setPriceData(data) {
-      $.set(data);
     }
   };
 
@@ -228,10 +229,10 @@
   // src/itad.js
   var GOG_SHOP_ID = 35;
   var api = (iface, method, version) => `https://api.isthereanydeal.com/${iface}/${method}/${version}`;
-  async function getInfo(gameSlug) {
+  async function getInfo(gameTitle) {
     let [info, error] = [{ id: "", slug: "" }, void 0];
     const endpoint = api("games", "search", "v1");
-    const params = { key: API_KEY, title: gameSlug, results: 1 };
+    const params = { key: API_KEY, title: gameTitle, results: 1 };
     try {
       const res = await request("GET", endpoint, { params });
       if (!Array.isArray(res) || res.length === 0)
@@ -244,7 +245,10 @@
     return [info, error];
   }
   async function getPriceOverview(id, country) {
-    let [overview, error] = [{ current: {}, historical: {} }, void 0];
+    let [overview, error] = [
+      { current: {}, historical: {}, bundles: 0 },
+      void 0
+    ];
     const endpoint = api("games", "overview", "v2");
     const params = { key: API_KEY, country };
     const body = [id];
@@ -269,6 +273,9 @@
             date: getDateStr(lowest.timestamp)
           };
         }
+      }
+      if (res.bundles) {
+        overview.bundles = res.bundles.length;
       }
     } catch (e) {
       error = e;
@@ -295,19 +302,27 @@
     }
     return [low, error];
   }
-  async function getBundles(id, country) {
-    let [bundles, error] = [{}, void 0];
+  async function getCurrentBundles(id, country) {
+    let [bundles, error] = [[], void 0];
     const endpoint = api("games", "bundles", "v2");
-    const params = { key: API_KEY, id, country, expired: true };
+    const params = { key: API_KEY, id, country, expired: false };
     try {
       let res = await request("GET", endpoint, { params });
-      bundles.total = res.length;
+      if (Array.isArray(res)) {
+        bundles = res.map((bundle) => {
+          const url = new URL(bundle.url).searchParams.get("URL") || bundle.url;
+          return {
+            title: bundle.title,
+            url
+          };
+        });
+      }
     } catch (e) {
       error = e;
     }
     return [bundles, error];
   }
-  async function getPriceData(gogSlug, userCountry) {
+  async function getPriceData(gameTitle, userCountry) {
     let priceData = {
       historicalLow: {},
       historicalLowGOG: {},
@@ -316,13 +331,13 @@
     };
     let error = void 0;
     try {
-      let [info, infoError] = await getInfo(gogSlug);
+      let [{ id, slug }, infoError] = await getInfo(gameTitle);
       if (infoError)
         throw infoError;
       let res = await Promise.all([
-        getPriceOverview(info.id, userCountry),
-        getHistoricalLowGOG(info.id, userCountry),
-        getBundles(info.id, userCountry)
+        getPriceOverview(id, userCountry),
+        getHistoricalLowGOG(id, userCountry),
+        getCurrentBundles(id, userCountry)
       ]);
       let batchError = res.reduce((a, [_data, resError]) => {
         return resError ? resError : a;
@@ -330,12 +345,12 @@
       if (batchError)
         throw batchError;
       priceData = {
-        itadId: info.id,
-        itadSlug: info.slug,
+        itadSlug: slug,
         currentLowest: res[0][0].current,
         historicalLow: res[0][0].historical,
+        totalBundles: res[0][0].bundles,
         historicalLowGOG: res[1][0],
-        bundles: res[2][0]
+        currentBundles: res[2][0]
       };
     } catch (e) {
       error = e;
@@ -347,13 +362,15 @@
   var getValue = (key) => GM_getValue(key, null);
   var setValue = (key, value) => GM_setValue(key, value);
   function retrieveUserSettings() {
+    const collapsed = getValue("collapsed");
     const userRegion = getValue("userRegion");
     const userCountry = getValue("userCountry");
-    return { userRegion, userCountry };
+    return { collapsed, userRegion, userCountry };
   }
-  function persistUserSettings({ userRegion, userCountry }) {
-    setValue("userRegion", userRegion);
-    setValue("userCountry", userCountry);
+  function persistUserSettings(settings = {}) {
+    for (const k in settings) {
+      setValue(k, settings[k]);
+    }
   }
 
   // src/data/region_map.json
@@ -372,8 +389,8 @@
     }
   });
   var Notifications = ({ state }) => {
-    const historicalLow = state.historicalLow.price || void 0;
-    const currentLowest = state.currentLowest.price_new || void 0;
+    const historicalLow = state.historicalLow.price;
+    const currentLowest = state.currentLowest.price;
     const userCurrency = region_map_default[state.userRegion][state.userCountry].currency.code;
     if (
       // If price is neither Historical Low or Current Low
@@ -383,7 +400,7 @@
     }
     return m(
       "div",
-      { style: { margin: "0.8em 0", lineHeight: "1.5em" } },
+      { style: { margin: "0.8em 0 0.4em 0", lineHeight: "1.5em" } },
       historicalLow && state.currentPrice <= historicalLow && m(
         "p",
         m("i", ""),
@@ -397,11 +414,11 @@
     );
   };
   var Stats = ({ state }) => {
-    const { currentLowest, historicalLow, historicalLowGOG, bundles, slug } = state;
+    const { currentLowest, historicalLow, historicalLowGOG, totalBundles, currentBundles, itadSlug } = state;
     const currency = region_map_default[state.userRegion][state.userCountry].currency;
     const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
-    const infoUrl = `https://isthereanydeal.com/game/${slug}/info/`;
-    const historyUrl = `https://isthereanydeal.com/game/${slug}/history/`;
+    const infoUrl = `https://isthereanydeal.com/game/${itadSlug}/info/`;
+    const historyUrl = `https://isthereanydeal.com/game/${itadSlug}/history/`;
     return m(
       "div",
       { style: { fontSize: "13px", margin: "1em 0", lineHeight: "1.7em" } },
@@ -417,7 +434,7 @@
       ),
       historicalLow.price && m(
         "p",
-        m("b", {}, "Historical Lowest Price: "),
+        m("b", "Historical Lowest Price: "),
         `${formatPrice(historicalLow.price.toFixed(2))} at ${historicalLow.shop} on ${historicalLow.date} `,
         "(",
         Link({ href: historyUrl }, "Info"),
@@ -425,19 +442,30 @@
       ),
       historicalLowGOG.price && m(
         "p",
-        m("b", {}, "Historical Lowest Price on GOG: "),
+        m("b", "Historical Lowest Price on GOG: "),
         `${formatPrice(historicalLowGOG.price.toFixed(2))} on ${historicalLowGOG.date} `,
         "(",
         Link({ href: historyUrl }, "Info"),
         ")"
       ),
-      bundles.total !== void 0 && m(
+      totalBundles !== void 0 && m(
         "p",
-        m("b", {}, "Number of times this game has been in a bundle: "),
-        `${bundles.total} `,
+        m("b", "Number of times this game has been in a bundle: "),
+        `${totalBundles} `,
         "(",
         Link({ href: infoUrl }, "Info"),
         ")"
+      ),
+      currentBundles.length > 0 && m(
+        "p",
+        { style: "color: #739c00" },
+        m("b", "This game is currently in these bundles:"),
+        m(
+          "ul",
+          currentBundles.map(
+            (bundle) => m("li", Link({ href: bundle.url }, bundle.title))
+          )
+        )
       )
     );
   };
@@ -451,14 +479,13 @@
         actions.reset();
         redraw();
         const [priceData, error] = await getPriceData(
-          state.gameId,
-          state.userRegion,
+          state.gameTitle,
           state.userCountry
         );
         if (error)
           actions.set({ error });
         else
-          actions.setPriceData(priceData);
+          actions.set(priceData);
       }
     }, "click here to try again.")
   );
@@ -467,7 +494,7 @@
     { style: { textAlign: "center", width: "100%" } },
     m(
       "p",
-      { style: "padding: 1.5em 0 0.3em 0;" },
+      { style: "padding: 1.5em 0 1em 0;" },
       m("span", {
         class: "menu-friends-empty__spinner is-spinning"
       })
@@ -477,7 +504,7 @@
     const countryValue = `${state.userRegion}-${state.userCountry}`;
     return m(
       "div",
-      { style: { margin: "1em 0 0 0", fontSize: "13px" } },
+      { style: { margin: "1em 0", fontSize: "13px" } },
       m("p", m("b", "Enhanced GOG Region")),
       m(
         "p",
@@ -498,13 +525,13 @@
               persistUserSettings({ userRegion, userCountry });
               actions.set({ userRegion, userCountry });
               const [priceData, error] = await getPriceData(
-                state.gogSlug,
+                state.gameTitle,
                 userCountry
               );
               if (error)
                 actions.set({ error });
               else
-                actions.setPriceData(priceData);
+                actions.set(priceData);
             }
           },
           REGIONS.map(
@@ -525,31 +552,71 @@
   };
 
   // src/index.js
-  var App = ({ state, actions }) => m(
-    "div",
-    Divider(),
-    m(
+  var App = ({ state, actions }) => {
+    const isLoading = !(state.currentLowest || state.historicalLow || state.historicalLowGOG || state.totalBundles || state.currentBundles);
+    const showContent = !isLoading && !state.error;
+    return m(
       "div",
-      { style: "padding: 1.2em 24px;" },
-      state.currentLowest && state.historicalLow && Notifications({ state }),
-      state.currentLowest || state.historicalLow || state.historicalLowGOG || state.bundles ? Stats({ state }) : state.error ? Error2({ state, actions }) : Spinner(),
-      CountrySelect({ state, actions })
-    )
-  );
+      Divider(),
+      m(
+        "div",
+        { style: { padding: "1.2em 24px" } },
+        showContent && Notifications({ state }),
+        state.error ? Error2({ state, actions }) : isLoading ? Spinner() : null,
+        m(
+          "div",
+          {
+            style: {
+              display: "grid",
+              gridTemplateRows: state.collapsed ? "0fr" : "1fr",
+              transition: "grid-template-rows 0.3s ease"
+            }
+          },
+          m(
+            "div",
+            {
+              style: { overflow: "hidden" }
+            },
+            showContent && Stats({ state }),
+            CountrySelect({ state, actions })
+          )
+        ),
+        m(
+          "div",
+          { style: { textAlign: "center" } },
+          m("button", {
+            style: {
+              fontSize: "13px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              border: "1px solid rgba(100, 100, 100, 0.2)",
+              padding: "0.5em"
+            },
+            onclick: () => {
+              const collapsed = !state.collapsed;
+              actions.set({ collapsed });
+              persistUserSettings({ collapsed });
+            }
+          }, state.collapsed ? "Show Enhanced GOG \u25B4" : "Hide \u25BE")
+        )
+      )
+    );
+  };
   var product = unsafeWindow.productcardData;
   if (product && typeof product === "object") {
     console.log(`== Enhanced GOG ${VERSION} ==`);
     const state = State({
-      gogSlug: product.cardProductSlug,
-      currentPrice: product.cardProduct.price.finalAmount,
+      gameTitle: product.cardProduct.title,
+      currentPrice: Number(product.cardProduct.price.finalAmount),
       pageCurrency: product.currency
     });
     const actions = Actions(state);
-    const { userRegion, userCountry } = retrieveUserSettings();
-    if (userRegion && userCountry) {
-      actions.set({ userRegion, userCountry });
+    const { collapsed, userRegion, userCountry } = retrieveUserSettings();
+    if (collapsed && userRegion && userCountry) {
+      actions.set({ collapsed, userRegion, userCountry });
     } else {
       persistUserSettings({
+        collapsed: state.collapsed,
         userRegion: state.userRegion,
         userCountry: state.userCountry
       });
@@ -558,10 +625,10 @@
     container.className = "enhanced-gog-container";
     document.querySelector("div.product-actions").appendChild(container);
     mount(container, () => App({ state, actions }));
-    getPriceData(state.gogSlug, state.userCountry).then(([priceData, error]) => {
+    getPriceData(state.gameTitle, state.userCountry).then(([priceData, error]) => {
       if (error)
         throw error;
-      actions.setPriceData(priceData);
+      actions.set(priceData);
     }).catch((error) => {
       console.error("Enhanced GOG Failed to initialize.");
       console.error(error);
@@ -569,4 +636,3 @@
     }).finally(redraw);
   }
 })();
-//# sourceMappingURL=enhanced-gog.user.js.map
