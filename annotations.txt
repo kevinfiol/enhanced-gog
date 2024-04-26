@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name enhanced-gog
-// @namespace https://github.com/kevinfiol/enhanced-gog
+// @namespace https://github.com/twindan/enhanced-gog
 // @version {{VERSION}}
 // @description Enhanced experience on GOG.com
-// @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
+// @license MIT; https://raw.githubusercontent.com/twindan/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
 // @include https://*.gog.com/game/*
 // @include http://*.gog.com/*/game/*
 // @include https://*.gog.com/*/game/*
-// @icon https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/img/icon.png
-// @updateURL https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/bin/enhanced-gog.user.js
-// @downloadURL https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/bin/enhanced-gog.user.js
+// @icon https://raw.githubusercontent.com/twindan/enhanced-gog/master/img/icon.png
+// @updateURL https://raw.githubusercontent.com/twindan/enhanced-gog/master/bin/enhanced-gog.user.js
+// @downloadURL https://raw.githubusercontent.com/twindan/enhanced-gog/master/bin/enhanced-gog.user.js
 // @run-at document-idle
 // @grant GM_xmlhttpRequest
 // @grant GM.xmlHttpRequest
