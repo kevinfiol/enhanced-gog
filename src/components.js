@@ -57,11 +57,12 @@ export const Notifications = ({ state }) => {
 };
 
 export const Stats = ({ state }) => {
-  const { currentLowest, historicalLow, historicalLowGOG, totalBundles, currentBundles, itadSlug } = state;
+  const { currentLowest, historicalLow, historicalLowGOG, totalBundles, currentBundles, itadSlug, productId } = state;
   const currency = region_map[state.userRegion][state.userCountry].currency;
   const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
   const infoUrl = `https://isthereanydeal.com/game/${itadSlug}/info/`;
   const historyUrl = `https://isthereanydeal.com/game/${itadSlug}/history/`;
+  const gogDbUrl = `https://gogdb.org/product/${productId}`;
 
   return (
     m('div', { style: { fontSize: '13px', margin: '1em 0', lineHeight: '1.7em' } },
@@ -87,7 +88,8 @@ export const Stats = ({ state }) => {
         m('p',
           m('b', 'Historical Lowest Price on GOG: '),
           `${ formatPrice(historicalLowGOG.price.toFixed(2)) } on ${ historicalLowGOG.date } `,
-          '(', Link({ href: historyUrl }, 'Info'), ')'
+          '(', Link({ href: historyUrl }, 'Info'), ') (',
+               Link({ href: gogDbUrl }, 'DB'), ')'
         )
       ,
 

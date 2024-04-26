@@ -82,7 +82,8 @@ if (product && typeof product === 'object') {
   const state = State({
     gameTitle: product.cardProduct.title,
     currentPrice: Number(product.cardProduct.price.finalAmount),
-    pageCurrency: product.currency
+    pageCurrency: product.currency,
+    productId: product.cardProductId
   });
 
   const actions = Actions(state);

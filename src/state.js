@@ -2,6 +2,7 @@ export const State = (init = {}) => ({
   collapsed: false,
   gameTitle: undefined,
   itadSlug: undefined,
+  productId: undefined,
   currentPrice: undefined,
   pageCurrency: undefined,
   userRegion: 'us', // deprecated
