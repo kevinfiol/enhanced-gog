@@ -25,10 +25,14 @@ Note: I recommend Violentmonkey since it is Free, Open-Source, and light on syst
 
 2. **[Click here to install the userscript](https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/bin/enhanced-gog.user.js)**
 
-## Building
+## Development
 
 If you want to build a custom version of the script from the sources:
 
 1. Install [Node.js](https://nodejs.org/)
-2. From the root directory, run `npm install` to install the dependent packages
-3. Next run `npm run build` to build the script. The compiled script will be in 'bin/enhanced-gog.user.js`
+2. The project uses `pnpm` as the package manager. `npm` will work,  but will be incompatible with the lockfile, so there is a chance, albeit small, that you can install bad dependencies. You can install `pnpm` by using `npm install -g pnpm`.
+3. From the root directory, run `pnpm install` (or `npm` if you haven't installed `pnpm`) to install the dependencies. 
+4. Next run `npm run build` to build the script. The compiled script will be in `bin/enhanced-gog.user.js`.
+
+There is also a development script available that will start a development server. To run this, use: `pnpm run dev` or `pnpm dev`.
+
