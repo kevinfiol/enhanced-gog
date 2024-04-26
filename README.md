@@ -24,3 +24,11 @@ Data graciously provided by [IsThereAnyDeal](https://isthereanydeal.com).
 Note: I recommend Violentmonkey since it is Free, Open-Source, and light on system resources. Tampermonkey is good, but it is proprietary.
 
 2. **[Click here to install the userscript](https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/bin/enhanced-gog.user.js)**
+
+## Building
+
+If you want to build a custom version of the script from the sources:
+
+1. Install [Node.js](https://nodejs.org/)
+2. From the root directory, run `npm install` to install the dependent packages
+3. Next run `npm run build` to build the script. The compiled script will be in 'bin/enhanced-gog.user.js`
