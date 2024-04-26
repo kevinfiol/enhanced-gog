@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name enhanced-gog
-// @namespace https://github.com/kevinfiol/enhanced-gog
+// @namespace https://github.com/twindan/enhanced-gog
 // @version 1.5.0
 // @description Enhanced experience on GOG.com
-// @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
+// @license MIT; https://raw.githubusercontent.com/twindan/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
 // @include https://*.gog.com/game/*
 // @include http://*.gog.com/*/game/*
 // @include https://*.gog.com/*/game/*
-// @icon https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/img/icon.png
-// @updateURL https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/bin/enhanced-gog.user.js
-// @downloadURL https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/bin/enhanced-gog.user.js
+// @icon https://raw.githubusercontent.com/twindan/enhanced-gog/master/img/icon.png
+// @updateURL https://raw.githubusercontent.com/twindan/enhanced-gog/master/bin/enhanced-gog.user.js
+// @downloadURL https://raw.githubusercontent.com/twindan/enhanced-gog/master/bin/enhanced-gog.user.js
 // @run-at document-idle
 // @grant GM_xmlhttpRequest
 // @grant GM.xmlHttpRequest
@@ -21,7 +21,7 @@
 // ==/UserScript==
 
 (() => {
-  // node_modules/.pnpm/umhi@0.1.4/node_modules/umhi/dist/umhi.js
+  // node_modules/umhi/dist/umhi.js
   var NIL = void 0;
   var REDRAWS = [];
   var isArray = Array.isArray;
@@ -129,6 +129,7 @@
     collapsed: false,
     gameTitle: void 0,
     itadSlug: void 0,
+    productId: void 0,
     currentPrice: void 0,
     pageCurrency: void 0,
     userRegion: "us",
@@ -414,11 +415,12 @@
     );
   };
   var Stats = ({ state }) => {
-    const { currentLowest, historicalLow, historicalLowGOG, totalBundles, currentBundles, itadSlug } = state;
+    const { currentLowest, historicalLow, historicalLowGOG, totalBundles, currentBundles, itadSlug, productId } = state;
     const currency = region_map_default[state.userRegion][state.userCountry].currency;
     const formatPrice = createPriceFormatter(currency.sign, currency.delimiter, currency.left);
     const infoUrl = `https://isthereanydeal.com/game/${itadSlug}/info/`;
     const historyUrl = `https://isthereanydeal.com/game/${itadSlug}/history/`;
+    const gogDbUrl = `https://gogdb.org/product/${productId}`;
     return m(
       "div",
       { style: { fontSize: "13px", margin: "1em 0", lineHeight: "1.7em" } },
@@ -446,6 +448,8 @@
         `${formatPrice(historicalLowGOG.price.toFixed(2))} on ${historicalLowGOG.date} `,
         "(",
         Link({ href: historyUrl }, "Info"),
+        ") (",
+        Link({ href: gogDbUrl }, "DB"),
         ")"
       ),
       totalBundles !== void 0 && m(
@@ -608,7 +612,8 @@
     const state = State({
       gameTitle: product.cardProduct.title,
       currentPrice: Number(product.cardProduct.price.finalAmount),
-      pageCurrency: product.currency
+      pageCurrency: product.currency,
+      productId: product.cardProductId
     });
     const actions = Actions(state);
     const { collapsed, userRegion, userCountry } = retrieveUserSettings();
