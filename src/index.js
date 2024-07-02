@@ -90,7 +90,7 @@ if (product && typeof product === 'object') {
   // read from storage and update state if necessary
   const { collapsed, userRegion, userCountry } = retrieveUserSettings();
 
-  if (collapsed && userRegion && userCountry) {
+  if (collapsed != null && userRegion && userCountry) {
     actions.set({ collapsed, userRegion, userCountry });
   } else {
     // save defaults to storage

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.5.0
+// @version 1.5.1
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -121,7 +121,7 @@
   }
 
   // src/config.js
-  var VERSION = "1.5.0";
+  var VERSION = "1.5.1";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -612,7 +612,7 @@
     });
     const actions = Actions(state);
     const { collapsed, userRegion, userCountry } = retrieveUserSettings();
-    if (collapsed && userRegion && userCountry) {
+    if (collapsed != null && userRegion && userCountry) {
       actions.set({ collapsed, userRegion, userCountry });
     } else {
       persistUserSettings({
