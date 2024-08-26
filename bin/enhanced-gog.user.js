@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.5.1
+// @version 1.5.2
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -121,7 +121,7 @@
   }
 
   // src/config.js
-  var VERSION = "1.5.1";
+  var VERSION = "1.5.2";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -188,7 +188,7 @@
         xhr({
           method,
           url: `${url}?${queryStr}`,
-          data: JSON.stringify(body),
+          data: method === "POST" ? JSON.stringify(body) : null,
           headers: { "Content-Type": "application/json" },
           onload: (res) => {
             let json = {};
