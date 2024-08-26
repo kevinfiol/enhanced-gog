@@ -28,7 +28,7 @@ export const request = (method, url, { params = {}, body = {} }) => {
       xhr({
         method: method,
         url: `${url}?${queryStr}`,
-        data: JSON.stringify(body),
+        data: method === 'POST' ? JSON.stringify(body) : null,
         headers: { 'Content-Type': 'application/json' },
         onload: res => {
           let json = {};
