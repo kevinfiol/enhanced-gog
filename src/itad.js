@@ -1,5 +1,5 @@
 import { API_KEY } from './config';
-import { getDateStr, request } from './util';
+import { getDateStr, getUrlPart, request } from './util';
 
 const GOG_SHOP_ID = 35;
 
@@ -108,13 +108,11 @@ export async function getCurrentBundles(id, country) {
 
     if (Array.isArray(res)) {
       bundles = res.map((bundle) => {
-        const url = (new URL(bundle.url)).searchParams.get('URL') || bundle.url;
-
         return {
           title: bundle.title,
-          url
+          url: getUrlPart(bundle.url)
         };
-      })
+      });
     }
   } catch (e) {
     error = e;

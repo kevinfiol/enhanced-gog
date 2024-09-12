@@ -5,6 +5,12 @@ export const createPriceFormatter = (sign, delimiter, left) => {
   };
 };
 
+export const getUrlPart = (str) => {
+  const url = new URL(str);
+  const part = url.searchParams.get('url') || url.searchParams.get('URL');
+  return part.trim() || url;
+};
+
 export const getDateStr = timestamp => {
   const date = new Date(timestamp);
   const month = date.getMonth() + 1;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.5.2
+// @version 1.5.3
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -121,7 +121,7 @@
   }
 
   // src/config.js
-  var VERSION = "1.5.2";
+  var VERSION = "1.5.3";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -169,6 +169,11 @@
       const delimited_price = price.replace(".", delimiter);
       return left ? `${sign}${delimited_price}` : `${delimited_price}${sign}`;
     };
+  };
+  var getUrlPart = (str) => {
+    const url = new URL(str);
+    const part = url.searchParams.get("url") || url.searchParams.get("URL");
+    return part.trim() || url;
   };
   var getDateStr = (timestamp) => {
     const date = new Date(timestamp);
@@ -310,10 +315,9 @@
       let res = await request("GET", endpoint, { params });
       if (Array.isArray(res)) {
         bundles = res.map((bundle) => {
-          const url = new URL(bundle.url).searchParams.get("URL") || bundle.url;
           return {
             title: bundle.title,
-            url
+            url: getUrlPart(bundle.url)
           };
         });
       }
