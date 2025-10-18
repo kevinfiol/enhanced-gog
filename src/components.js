@@ -1,5 +1,5 @@
 import { m, redraw } from 'umhi';
-import { createPriceFormatter } from './util';
+import { createPriceFormatter, isDarkMode } from './util';
 import { getPriceData } from './itad';
 import { persistUserSettings } from './storage';
 import region_map from './data/region_map.json';
@@ -153,10 +153,11 @@ export const CountrySelect = ({ state, actions }) => {
       m('p',
         m('select', {
           style: {
-            border: '1px solid #cecece',
+            border: isDarkMode() ? '1px solid #404040' : '1px solid #cecece',
             padding: '0.4em',
             margin: '0.5em 0 0 0',
-            backgroundColor: '#f6f6f6'
+            backgroundColor: isDarkMode() ? '#212121' : '#f6f6f6',
+            color: isDarkMode() ? '#f2f2f2' : '#000000'
           },
 
           value: countryValue,
