@@ -20,6 +20,9 @@ export const getDateStr = timestamp => {
   return `${month}/${day}/${year}`;
 };
 
+export const isDarkMode = () => 
+  document.documentElement.getAttribute('data-theme') === 'dark';
+
 export const request = (method, url, { params = {}, body = {} }) => {
   const queryArr = Object.keys(params).map(key => {
     return `${ encodeURIComponent(key) }=${ encodeURIComponent(params[key]) }`;
