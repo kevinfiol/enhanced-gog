@@ -109,6 +109,12 @@ if (product && typeof product === 'object') {
   document.querySelector('div.product-actions').appendChild(container);
   mount(container, () => App({ state, actions }));
 
+  const themeObserver = new MutationObserver(() => redraw());
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme']
+  });
+
   // fetch price data
   getPriceData(state.gameTitle, state.userCountry)
     .then(([priceData, error]) => {
