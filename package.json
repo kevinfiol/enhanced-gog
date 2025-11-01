@@ -17,7 +17,7 @@
     "umhi": "^0.1.4"
   },
   "devDependencies": {
-    "esbuild": "0.17.3",
+    "esbuild": "0.25.0",
     "servbot": "0.2.6"
   }
 }
