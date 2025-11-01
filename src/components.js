@@ -155,8 +155,7 @@ export const CountrySelect = ({ state, actions }) => {
           style: {
             border: '1px solid #cecece',
             padding: '0.4em',
-            margin: '0.5em 0 0 0',
-            backgroundColor: '#f6f6f6'
+            margin: '0.5em 0 0 0'
           },
 
           value: countryValue,

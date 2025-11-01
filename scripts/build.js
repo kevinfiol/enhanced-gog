@@ -2,7 +2,7 @@ import servbot from 'servbot';
 import esbuild from 'esbuild';
 import { resolve } from 'path';
 import { annotate } from './annotate.js';
-import packageJSON from '../package.json' assert { type: 'json' };
+import packageJSON from '../package.json' with { type: "json" };
 
 export const OUTFILE = resolve('bin/enhanced-gog.user.js');
 const DEV = process.argv.includes('-d');

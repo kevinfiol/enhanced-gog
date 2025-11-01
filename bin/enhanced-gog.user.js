@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name enhanced-gog
 // @namespace https://github.com/kevinfiol/enhanced-gog
-// @version 1.5.3
+// @version 1.5.4
 // @description Enhanced experience on GOG.com
 // @license MIT; https://raw.githubusercontent.com/kevinfiol/enhanced-gog/master/LICENSE
 // @include http://*.gog.com/game/*
@@ -121,7 +121,7 @@
   }
 
   // src/config.js
-  var VERSION = "1.5.3";
+  var VERSION = "1.5.4";
   var API_KEY = "d047b30e0fc7d9118f3953de04fa6af9eba22379";
 
   // src/state.js
@@ -518,8 +518,7 @@
             style: {
               border: "1px solid #cecece",
               padding: "0.4em",
-              margin: "0.5em 0 0 0",
-              backgroundColor: "#f6f6f6"
+              margin: "0.5em 0 0 0"
             },
             value: countryValue,
             onchange: async (ev) => {
